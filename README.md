@@ -8,15 +8,12 @@ Yet Another Artificial GI-player
 
 # 介绍
 
-基于目前大热的Diffusion Policy等强化学习/模仿学习算法，实现原神的基于动作生成的AI。
+基于目前大热的Diffusion Policy、ACT等强化学习/模仿学习算法，实现原神的基于动作生成的AI。
 
 # TODOs
 
-- [ ] 抄Mobile ALOHA
-- [ ] 抄Mobile ALOHA
-- [ ] 抄Mobile ALOHA
-- [ ] 抄Mobile ALOHA（bushi）
 - [ ] 消化Mobile ALOHA
+- [ ] 怎么抄？
 - [ ] 定义输入和输出
     - [ ] in: 图像+感知状态
     - [ ] out: 动作
