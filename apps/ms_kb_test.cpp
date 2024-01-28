@@ -1,10 +1,11 @@
+// 用于测试interception的键鼠捕获
+
 #include <iostream>
 #include <vector>
 #include <string>
 #include <thread>
 #include <windows.h>
 #include "interception.h"
-// #include "config.h"
 
 int main()
 {
@@ -20,51 +21,34 @@ int main()
     InterceptionDevice device;
     InterceptionStroke stroke;
 
-    interception_set_filter(ctx, interception_is_mouse, INTERCEPTION_FILTER_MOUSE_MOVE);
+    // 捕获鼠标移动以及键盘按键
+    interception_set_filter(ctx, interception_is_mouse, 
+                                INTERCEPTION_FILTER_MOUSE_ALL);
+    interception_set_filter(ctx, interception_is_keyboard, 
+                                INTERCEPTION_FILTER_KEY_DOWN|INTERCEPTION_FILTER_KEY_UP|INTERCEPTION_FILTER_KEY_E0);
 
     POINT p;
 
-    while (true)
-    {
-        int nstroke = interception_receive(ctx, device = interception_wait(ctx), &stroke, 1);
+    while (interception_receive(ctx, device = interception_wait(ctx), &stroke, 1) > 0) {
+        if (interception_is_mouse(device)) {
+            // mouse 尝试输出dx dy
+            InterceptionMouseStroke &mstroke = reinterpret_cast<InterceptionMouseStroke &>(stroke);
+            
+            // 直接输出全部的信息
+            std::cout << "Got mouse stroke: ";
+            std::cout << "state : " << mstroke.state << ", flags : " << mstroke.flags << ", rolling : " << mstroke.rolling << ", x : " << mstroke.x << ", y : " << mstroke.y << ", information : " << mstroke.information << std::endl;
 
-        if (nstroke <= 0)
-        {
-            continue;
+
+            interception_send(ctx, device, &stroke, 1);
         }
-        InterceptionMouseStroke &mstroke = reinterpret_cast<InterceptionMouseStroke &>(stroke);
-
-        std::cout << "Got mouse move: { types : [";
-        bool first = true;
-        for (auto &[flag, name] : flagAndNames)
-        {
-            bool flagExist = (mstroke.flags & flag);
-            if (mstroke.flags == INTERCEPTION_MOUSE_MOVE_RELATIVE && flag == INTERCEPTION_MOUSE_MOVE_RELATIVE)
-            {
-                flagExist = true;
-            }
-            if (!flagExist)
-            {
-                continue;
-            }
-
-            if (first)
-            {
-                std::cout << '"';
-            }
-            else
-            {
-                std::cout << ", \"";
-            }
-            std::cout << name << '"';
-            first = false;
+        
+        if (interception_is_keyboard(device)) {
+            // keyboard
+            InterceptionKeyStroke &kstroke = reinterpret_cast<InterceptionKeyStroke &>(stroke);
+            std::cout << "Got keyboard stroke: ";
+            std::cout << "code : " << kstroke.code << ", state : " << kstroke.state << std::endl;
+            interception_send(ctx, device, &stroke, 1);
         }
-        std::cout << "], x : " << mstroke.x << ", y : " << mstroke.y << " }" << std::endl;
-
-        GetCursorPos(&p);
-        std::cout << "CursorPos : (" << p.x << ", " << p.y << ")" << std::endl;
-
-        interception_send(ctx, device, &stroke, 1);
     }
 
     interception_destroy_context(ctx);

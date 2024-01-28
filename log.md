@@ -7,7 +7,11 @@
 
 pynput无法直接捕获鼠标dx dy，只能捕获绝对位置。相对位置通过差分，在屏幕边缘效果很差。
 放弃python进行捕获
-cpp的interception可以捕获dx dy 左右键 up down 以及 键盘的 up down（需要测试）
+cpp的interception可以捕获dx dy 左右键 up down 以及 键盘的 up down~~（需要测试）~~ 测试见apps/ms_kb_test，均可捕获。
+
+测试interception的dx dy和键盘输入，
+
+
 
 
 
