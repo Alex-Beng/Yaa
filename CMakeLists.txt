@@ -1,10 +1,8 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 project(Yaa)
 
 set(CMAKE_CXX_STANDARD 17)
 
-link_directories(interception)
-# 设置includepath
-include_directories(interception)
+include(cmake/interception.cmake)
 
 add_subdirectory(apps)

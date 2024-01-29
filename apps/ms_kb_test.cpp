@@ -1,4 +1,4 @@
-// 用于测试interception的键鼠捕获
+// 用于测试interception的键鼠捕获 以及 发送
 
 #include <iostream>
 #include <vector>
@@ -7,16 +7,8 @@
 #include <windows.h>
 #include "interception.h"
 
-int main()
+void test_listen()
 {
-    std::vector<std::pair<int, std::string>> flagAndNames{
-        {INTERCEPTION_MOUSE_MOVE_ABSOLUTE, "absolute"},
-        {INTERCEPTION_MOUSE_MOVE_RELATIVE, "relative"},
-        {INTERCEPTION_MOUSE_VIRTUAL_DESKTOP, "virtual desktop"},
-        {INTERCEPTION_MOUSE_ATTRIBUTES_CHANGED, "attribute change"},
-        {INTERCEPTION_MOUSE_MOVE_NOCOALESCE, "no coalesce"},
-        {INTERCEPTION_MOUSE_TERMSRV_SRC_SHADOW, "termsrv src shadow"}};
-
     InterceptionContext ctx = interception_create_context();
     InterceptionDevice device;
     InterceptionStroke stroke;
@@ -26,8 +18,6 @@ int main()
                                 INTERCEPTION_FILTER_MOUSE_ALL);
     interception_set_filter(ctx, interception_is_keyboard, 
                                 INTERCEPTION_FILTER_KEY_DOWN|INTERCEPTION_FILTER_KEY_UP|INTERCEPTION_FILTER_KEY_E0);
-
-    POINT p;
 
     while (interception_receive(ctx, device = interception_wait(ctx), &stroke, 1) > 0) {
         if (interception_is_mouse(device)) {
@@ -52,5 +42,20 @@ int main()
     }
 
     interception_destroy_context(ctx);
+}
+
+void test_send() {
+    // 用于测试发送
+    InterceptionContext ctx = interception_create_context();
+    InterceptionDevice device;
+    InterceptionStroke stroke;
+
+    // 测试输入wasd、空格、esc
+    
+}
+
+int main() {
+    test_listen();
+    // test_send();
     return 0;
 }
