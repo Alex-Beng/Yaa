@@ -4,8 +4,26 @@
 #include <vector>
 #include <string>
 #include <thread>
+#include <chrono>
 #include <windows.h>
 #include "interception.h"
+
+enum SCANCODE {
+    SCANCODE_W = 0x11,
+    SCANCODE_A = 0x1E,
+    SCANCODE_S = 0x1F,
+    SCANCODE_D = 0x20,
+    SCANCODE_SPACE = 0x39,
+    SCANCODE_ESC = 0x01
+};
+
+void countdown(int seconds) {
+    for (int i = seconds; i >= 0; i--) {
+        std::cout << "Countdown: " << i << " seconds" << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    std::cout << "Countdown complete!" << std::endl;
+}
 
 void test_listen()
 {
@@ -50,12 +68,78 @@ void test_send() {
     InterceptionDevice device;
     InterceptionStroke stroke;
 
+
     // 测试输入wasd、空格、esc
-    
+    device = INTERCEPTION_KEYBOARD(1);
+    countdown(2);
+    InterceptionKeyStroke kstroke;
+    kstroke.code = SCANCODE_W;
+    kstroke.state = INTERCEPTION_KEY_DOWN;
+    // 需要类型转换
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+    countdown(2);
+    kstroke.code = SCANCODE_W;
+    kstroke.state = INTERCEPTION_KEY_UP;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+
+    countdown(2);
+    kstroke.code = SCANCODE_A;
+    kstroke.state = INTERCEPTION_KEY_DOWN;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+    kstroke.code = SCANCODE_A;
+    kstroke.state = INTERCEPTION_KEY_UP;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+
+    countdown(2);
+    kstroke.code = SCANCODE_S;
+    kstroke.state = INTERCEPTION_KEY_DOWN;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+    kstroke.code = SCANCODE_S;
+    kstroke.state = INTERCEPTION_KEY_UP;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+
+    countdown(2);
+    kstroke.code = SCANCODE_D;
+    kstroke.state = INTERCEPTION_KEY_DOWN;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+    kstroke.code = SCANCODE_D;
+    kstroke.state = INTERCEPTION_KEY_UP;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+
+    countdown(2);
+    kstroke.code = SCANCODE_SPACE;
+    kstroke.state = INTERCEPTION_KEY_DOWN;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+    kstroke.code = SCANCODE_SPACE;
+    kstroke.state = INTERCEPTION_KEY_UP;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+
+    countdown(2);
+    kstroke.code = SCANCODE_ESC;
+    kstroke.state = INTERCEPTION_KEY_DOWN;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+    kstroke.code = SCANCODE_ESC;
+    kstroke.state = INTERCEPTION_KEY_UP;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);    
+
+    // 测试输入鼠标移动
+    device = INTERCEPTION_MOUSE(1);
+    countdown(2);
+    InterceptionMouseStroke mstroke;
+    mstroke.state = INTERCEPTION_MOUSE_MOVE_RELATIVE;
+    mstroke.flags = 0;
+    mstroke.rolling = 0;
+    mstroke.x = 10;
+    mstroke.y = 10;
+    mstroke.information = 0;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&mstroke), 1);
+
+    countdown(2);
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&mstroke), 1);
 }
 
 int main() {
-    test_listen();
-    // test_send();
+    // test_listen();
+    test_send();
     return 0;
 }
