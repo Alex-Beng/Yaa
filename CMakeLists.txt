@@ -4,5 +4,6 @@ project(Yaa)
 set(CMAKE_CXX_STANDARD 17)
 
 include(cmake/interception.cmake)
+include(cmake/nlohmann_json.cmake)
 
 add_subdirectory(apps)
