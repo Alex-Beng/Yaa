@@ -186,7 +186,9 @@ void record() {
     std::cout << "Press F6 to start recording...\n" << std::endl;
     wait_untill_press(SCANCODE_F6);
 
-
+    // 花上2^16打个lut
+    // 表示按键状态，以去除键盘重复的
+    bool key_state[1<<16] = {false};
 
     // 先存到内存里，然后再写入文件
     std::vector<ABEvent> events;
@@ -238,6 +240,13 @@ void record() {
                 std::cout << "Stop recording..." << std::endl;
                 break;
             }
+            if (key_state[kstroke.code] == true && kstroke.state == INTERCEPTION_KEY_DOWN) {
+                // 如果已经按下了，就不要再记录了
+                continue;
+            }
+            key_state[kstroke.code] = kstroke.state == INTERCEPTION_KEY_DOWN;
+
+
             // 输出全部的信息
             // std::cout << "Got keyboard stroke: ";
             // std::cout << "code : " << kstroke.code << ", state : " << kstroke.state << ", information : " << kstroke.information << std::endl;
