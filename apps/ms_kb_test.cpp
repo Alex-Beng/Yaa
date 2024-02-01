@@ -14,7 +14,9 @@ enum SCANCODE {
     SCANCODE_S = 0x1F,
     SCANCODE_D = 0x20,
     SCANCODE_SPACE = 0x39,
-    SCANCODE_ESC = 0x01
+    SCANCODE_ESC = 0x01,
+    SCANCODE_1 = 0x02,
+    SCANCODE_2 = 0x03
 };
 
 void countdown(int seconds) {
@@ -69,7 +71,7 @@ void test_send() {
     InterceptionStroke stroke;
 
 
-    // 测试输入wasd、空格、esc
+    // 测试输入wasd、空格、esc、12
     device = INTERCEPTION_KEYBOARD(1);
     countdown(2);
     InterceptionKeyStroke kstroke;
@@ -122,6 +124,22 @@ void test_send() {
     kstroke.state = INTERCEPTION_KEY_UP;
     interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);    
 
+    countdown(2);
+    kstroke.code = SCANCODE_1;
+    kstroke.state = INTERCEPTION_KEY_DOWN;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+    kstroke.code = SCANCODE_1;
+    kstroke.state = INTERCEPTION_KEY_UP;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+
+    countdown(2);
+    kstroke.code = SCANCODE_2;
+    kstroke.state = INTERCEPTION_KEY_DOWN;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+    kstroke.code = SCANCODE_2;
+    kstroke.state = INTERCEPTION_KEY_UP;
+    interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&kstroke), 1);
+
     // 测试输入鼠标移动
     device = INTERCEPTION_MOUSE(1);
     countdown(2);
@@ -139,7 +157,7 @@ void test_send() {
 }
 
 int main() {
-    // test_listen();
-    test_send();
+    test_listen();
+    // test_send();
     return 0;
 }
