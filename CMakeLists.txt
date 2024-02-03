@@ -7,5 +7,6 @@ add_compile_options(/utf-8)
 
 include(cmake/interception.cmake)
 include(cmake/nlohmann_json.cmake)
+include(cmake/opencv.cmake)
 
 add_subdirectory(apps)
