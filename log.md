@@ -9,7 +9,19 @@ pynput无法直接捕获鼠标dx dy，只能捕获绝对位置。相对位置通
 放弃python进行捕获
 cpp的interception可以捕获dx dy 左右键 up down 以及 键盘的 up down~~（需要测试）~~ 测试见apps/ms_kb_test，均可捕获。
 
-测试interception的dx dy和键盘输入，
+测试interception的dx dy和键盘输入。
+对比：autohotkey使用windows的GetAsyncKeyState和GetRawInputData来捕获键盘和鼠标输入。
+~~TODO：去除多余的键盘摁下事件。在录制or回放时候实现？录制！~~
+~~TODO：对比开环误差。~~ 纯dx dy误差较小，联合误差相当大，-> 说明需要learning based！学， 给我狠狠地学！
+
+
+## 环境依赖
+
+interception -> 自动安装
+
+nlohmann/json -> 自动安装
+
+OpenCV -> 手动安装
 
 
 
