@@ -6,13 +6,168 @@
 
 #include <windows.h>
 
-int main(int argc, char const *argv[]) {
+bool find_window_local(HWND& ret_handle) {
+    std::wstring wide = L"原神";
+    std::wstring class_name = L"UnityWndClass";
+    ret_handle = FindWindowW(class_name.c_str(), wide.c_str());
+    
+    return ret_handle != NULL;
+}
 
-    // 绘制一张包含Hello world的黑底白字图片并显示
-    cv::Mat img = cv::Mat::zeros(100, 1000, CV_8UC3);
-    cv::putText(img, "Hello World !", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
-    cv::imshow("Hello World", img);
-    cv::waitKey(0);
+bool find_window_cloud(HWND& ret_handle) {
+    std::wstring wide = L"云·原神";
+    ret_handle = FindWindowW(NULL, wide.c_str());
+    return ret_handle != NULL;
+}
+
+// stolen from cvat shamelessly
+bool bb_capture(HWND& giHandle, cv::Mat& frame) {
+	static HBITMAP	hBmp;
+	BITMAP bmp;
+
+    RECT giRect, giClientRect;
+    cv::Size giClientSize;
+
+	DeleteObject(hBmp);
+
+	if (giHandle == NULL) {
+        // std::cerr<<"无效句柄"<<std::endl;
+        std::cerr<<"invalid handle"<<std::endl;
+		return false;
+	}
+	if (!IsWindow(giHandle)) {
+        // std::cerr<<"无效句柄或指定句柄所指向窗口不存在"<<std::endl;
+        std::cerr<<"invalid handle or window does not exist"<<std::endl;
+		return false;
+	}
+	if (!GetWindowRect(giHandle, &giRect)) {
+        // std::cerr<<"无效句柄或指定句柄所指向窗口不存在"<<std::endl;
+        std::cerr<<"invalid handle or window does not exist"<<std::endl;
+		return false;
+	}
+	if (!GetClientRect(giHandle, &giClientRect)) {
+        // std::cerr<<"无效句柄或指定句柄所指向窗口不存在"<<std::endl;
+        std::cerr<<"invalid handle or window does not exist"<<std::endl;
+		return false;
+	}
+
+	//获取屏幕缩放比例
+	HWND hWnd = GetDesktopWindow();
+	HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+
+	// 获取监视器逻辑宽度与高度
+	MONITORINFOEX miex;
+	miex.cbSize = sizeof(miex);
+	GetMonitorInfo(hMonitor, &miex);
+	int cxLogical = (miex.rcMonitor.right - miex.rcMonitor.left);
+	//int cyLogical = (miex.rcMonitor.bottom - miex.rcMonitor.top);
+
+	// 获取监视器物理宽度与高度
+	DEVMODE dm;
+	dm.dmSize = sizeof(dm);
+	dm.dmDriverExtra = 0;
+	EnumDisplaySettings(miex.szDevice, ENUM_CURRENT_SETTINGS, &dm);
+	int cxPhysical = dm.dmPelsWidth;
+	//int cyPhysical = dm.dmPelsHeight;
+
+	double horzScale = ((double)cxPhysical / (double)cxLogical);
+	double screen_scale = horzScale;
+
+	giClientSize.width = (int)(screen_scale * (giClientRect.right - giClientRect.left));
+	giClientSize.height = (int)(screen_scale * (giClientRect.bottom - giClientRect.top));
+
+	//获取目标句柄的窗口大小RECT
+	GetWindowRect(giHandle, &giRect);/* 对原神窗口的操作 */
+
+	//获取目标句柄的DC
+	HDC hScreen = GetDC(giHandle);/* 对原神窗口的操作 */
+	HDC hCompDC = CreateCompatibleDC(hScreen);
+
+	//获取目标句柄的宽度和高度
+	int	nWidth = (int)((screen_scale) * (giRect.right - giRect.left));
+	int	nHeight = (int)((screen_scale) * (giRect.bottom - giRect.top));
+
+	//创建Bitmap对象
+	hBmp = CreateCompatibleBitmap(hScreen, nWidth, nHeight);//得到位图
+
+	SelectObject(hCompDC, hBmp); //不写就全黑
+
+	BitBlt(hCompDC, 0, 0, nWidth, nHeight, hScreen, 0, 0, SRCCOPY);
+	
+	////释放对象
+	DeleteDC(hScreen);
+	DeleteDC(hCompDC);
+
+	//类型转换
+	//这里获取位图的大小信息,事实上也是兼容DC绘图输出的范围
+	GetObject(hBmp, sizeof(BITMAP), &bmp);
+
+	int nChannels = bmp.bmBitsPixel == 1 ? 1 : bmp.bmBitsPixel / 8;
+	//int depth = bmp.bmBitsPixel == 1 ? 1 : 8;
+
+	//mat操作
+    cv::Mat giFrame;
+	giFrame.create(cv::Size(bmp.bmWidth, bmp.bmHeight), CV_MAKETYPE(CV_8U, nChannels));
+
+	GetBitmapBits(hBmp, bmp.bmHeight * bmp.bmWidth * nChannels, giFrame.data);
+
+	giFrame = giFrame(cv::Rect(giClientRect.left, giClientRect.top, giClientSize.width, giClientSize.height));
+
+
+	if (giFrame.empty()) {
+        // std::cerr<<"窗口画面为空"<<std::endl;
+        std::cerr<<"frame is empty"<<std::endl;
+		return false;
+	}
+
+	if (giFrame.cols < 480 || giFrame.rows < 360) {
+		// err = { 14, "窗口画面大小小于480x360，无法使用" };
+        // std::cerr<<"窗口画面大小小于480x360，无法使用"<<std::endl;
+        std::cerr<<"window size is too small"<<std::endl;
+		return false;
+	}
+	frame = giFrame;
+	return true;
+}
+
+// 
+
+
+
+
+int main(int argc, char const *argv[]) {
+    // 寻找窗口
+    HWND window_handle;
+    auto found = find_window_local(window_handle);
+    if (found) {
+        // std::cout<<window_handle<<std::endl;
+    }
+    else {
+        found = find_window_cloud(window_handle);
+        if (found) {
+            // std::cout<<window_handle<<std::endl;
+        }
+        else {
+            std::cout<<"cannot find window"<<std::endl;
+            return 0;
+        }
+    }
+    
+    // 截屏
+    cv::Mat frame;
+    auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < 500; i++) {
+        bb_capture(window_handle, frame);
+        // cv::imshow("frame", frame);
+        // cv::waitKey(1);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<std::endl;
+    // 每帧截屏时间
+    std::cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 500.0<<std::endl;
+    // 8.2421 ms in 10000 frames
+    // 7.498 ms in 10000 frames with release mode
+
     
     return 0;
 }
