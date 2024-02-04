@@ -4,3 +4,10 @@ interception
 bin
 .vscode
 build
+*.jpg
+*.png
+*.rar
+*.zip
+*.tar
+*.gz
+*.7z
