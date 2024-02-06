@@ -22,6 +22,10 @@ bool find_window_cloud(HWND& ret_handle) {
 
 // stolen from cvat shamelessly
 bool bb_capture(HWND& giHandle, cv::Mat& frame) {
+	auto start = std::chrono::high_resolution_clock::now();
+    // 句柄和位图结构体
+	// windows 中只能通过句柄操作具体数据
+	// 且需要手动管理生命周期
 	static HBITMAP	hBmp;
 	BITMAP bmp;
 
@@ -108,6 +112,7 @@ bool bb_capture(HWND& giHandle, cv::Mat& frame) {
 	//mat操作
     cv::Mat giFrame;
 	giFrame.create(cv::Size(bmp.bmWidth, bmp.bmHeight), CV_MAKETYPE(CV_8U, nChannels));
+	// std::cout<<bmp.bmWidth<<" "<<bmp.bmHeight<<" "<<nChannels<<std::endl;
 
 	GetBitmapBits(hBmp, bmp.bmHeight * bmp.bmWidth * nChannels, giFrame.data);
 
@@ -127,15 +132,100 @@ bool bb_capture(HWND& giHandle, cv::Mat& frame) {
 		return false;
 	}
 	frame = giFrame;
+	auto end = std::chrono::high_resolution_clock::now();
+	// std::cout<<"capture time: ";
+	// std::cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<std::endl;
+	// 9-27 ms
+	// 12.7 ms in average vs 11.1 ms in RUST with yap's implementation
 	return true;
 }
 
-// 
+// 截屏和对应的时间戳
+// std::queue<std::pair<cv::Mat, long long>> mat_queue;
+std::queue<cv::Mat> mat_queue;
+std::mutex mat_mtx;
+std::condition_variable mat_cv;
+
+// 截屏的生产者
+void producer(std::chrono::steady_clock::time_point start_time) {
+	// 初始化寻找窗口
+	HWND window_handle;
+	auto found = find_window_local(window_handle);
+	if (found) {
+		// std::cout<<window_handle<<std::endl;
+	}
+	else {
+		found = find_window_cloud(window_handle);
+		if (found) {
+			// std::cout<<window_handle<<std::endl;
+		}
+		else {
+			std::cout<<"cannot find window"<<std::endl;
+			return;
+		}
+	}
+	// 进行一个时的计
+	auto start = std::chrono::high_resolution_clock::now();
+	auto N = 10000.0;
+	int max_iter = -1;
+	// while (true) {
+	for (int i = 0; i < N; i++) {
+		auto iter_start = std::chrono::high_resolution_clock::now();
+		cv::Mat frame;
+		auto curr_time = std::chrono::high_resolution_clock::now();
+		auto curr_time_stamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_time).count();
+		bb_capture(window_handle, frame);
+		{
+			// std::lock_guard<std::mutex> lock(mat_mtx);
+			// mat_queue.push({frame, curr_time_stamp});
+			// mat_queue.push(frame);
+		}
+		// mat_cv.notify_one();
+		auto iter_end = std::chrono::high_resolution_clock::now();
+		auto iter_time = std::chrono::duration_cast<std::chrono::milliseconds>(iter_end - iter_start).count();
+		if (iter_time > max_iter) {
+			max_iter = iter_time;
+		}
+	}
+	auto end = std::chrono::high_resolution_clock::now();
+	std::cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<std::endl;
+	// 每帧截屏时间
+	std::cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / N<<std::endl;
+	// max iter time
+	// std::cout<<max_iter<<std::endl;
+}
 
 
-
+void consumer() {
+	cv::namedWindow("frame", cv::WINDOW_NORMAL);
+	while (true) {
+		std::unique_lock<std::mutex> lock(mat_mtx);
+		mat_cv.wait(lock, []{ return !mat_queue.empty(); });
+		// if (mat_queue.empty()) {
+		// 	std::this_thread::sleep_for(std::chrono::milliseconds(40));
+		// 	continue;
+		// }
+		cv::Mat frame = mat_queue.front();
+		// cv::Mat frame = mat_queue.front().first;
+		// long long time_stamp = mat_queue.front().second;
+		// cv::imshow("frame", frame);
+		std::cout<<"frame size: "<<frame.size()<<std::endl;
+		// cv::waitKey(1);
+		mat_queue.pop();
+		lock.unlock();
+	}
+}
 
 int main(int argc, char const *argv[]) {
+	std::thread producerThread(producer, std::chrono::steady_clock::now());
+	std::thread consumerThread(consumer);
+	producerThread.join();
+	consumerThread.join();
+	return 0;
+}
+
+
+int old_main(int argc, char const *argv[]) {
     // 寻找窗口
     HWND window_handle;
     auto found = find_window_local(window_handle);
@@ -164,10 +254,14 @@ int main(int argc, char const *argv[]) {
     auto end = std::chrono::high_resolution_clock::now();
     std::cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<std::endl;
     // 每帧截屏时间
+	std::cout<<"每帧截屏时间:";
     std::cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / 500.0<<std::endl;
     // 8.2421 ms in 10000 frames
     // 7.498 ms in 10000 frames with release mode
-
-    
+	// 测试加上队列的用时
+	// 16.9 ms with queue + cv + lock
+	// 14.47 ms with queue + no lock + huge memory leak
+	// 主要是队列带来的时间开销？
+	
     return 0;
 }
