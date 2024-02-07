@@ -22,7 +22,7 @@ bool find_window_cloud(HWND& ret_handle) {
 
 // stolen from cvat shamelessly
 bool bb_capture(HWND& giHandle, cv::Mat& frame) {
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
     // 句柄和位图结构体
     // windows 中只能通过句柄操作具体数据
     // 且需要手动管理生命周期
@@ -132,7 +132,7 @@ bool bb_capture(HWND& giHandle, cv::Mat& frame) {
         return false;
     }
     frame = giFrame;
-    auto end = std::chrono::high_resolution_clock::now();
+    // auto end = std::chrono::high_resolution_clock::now();
     // std::cout<<"capture time: ";
     // std::cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()<<std::endl;
     // 9-27 ms
@@ -165,9 +165,9 @@ void producer(std::chrono::steady_clock::time_point start_time) {
         }
     }
     // 进行一个时的计
-    auto start = std::chrono::high_resolution_clock::now();
-    auto N = 10000.0;
-    int max_iter = -1;
+    auto start = start_time;
+    auto N = 1000.0;
+    long long max_iter = -1;
     // while (true) {
     for (int i = 0; i < N; i++) {
         auto iter_start = std::chrono::high_resolution_clock::now();
@@ -192,7 +192,7 @@ void producer(std::chrono::steady_clock::time_point start_time) {
     // 每帧截屏时间
     std::cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() / N<<std::endl;
     // max iter time
-    // std::cout<<max_iter<<std::endl;
+    std::cout<<max_iter<<std::endl;
 }
 
 
@@ -262,6 +262,8 @@ int old_main(int argc, char const *argv[]) {
     // 16.9 ms with queue + cv + lock
     // 14.47 ms with queue + no lock + huge memory leak
     // 主要是队列带来的时间开销？
+    // nope，是std::cerr的问题
+    // 9.54 ms with queue + cv + lock - std::cerr
     
     return 0;
 }
