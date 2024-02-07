@@ -121,7 +121,7 @@ bool bb_capture(HWND& giHandle, cv::Mat& frame) {
 
     if (giFrame.empty()) {
         // std::cerr<<"窗口画面为空"<<std::endl;
-        std::cerr<<"frame is empty"<<std::endl;
+        // std::cerr<<"frame is empty"<<std::endl;
         return false;
     }
 
@@ -178,7 +178,7 @@ void producer(std::chrono::steady_clock::time_point start_time) {
         {
             // std::lock_guard<std::mutex> lock(mat_mtx);
             // mat_queue.push({frame, curr_time_stamp});
-            // mat_queue.push(frame);
+            mat_queue.push(frame);
         }
         // mat_cv.notify_one();
         auto iter_end = std::chrono::high_resolution_clock::now();
@@ -208,9 +208,9 @@ void consumer() {
         cv::Mat frame = mat_queue.front();
         // cv::Mat frame = mat_queue.front().first;
         // long long time_stamp = mat_queue.front().second;
-        // cv::imshow("frame", frame);
-        std::cout<<"frame size: "<<frame.size()<<std::endl;
-        // cv::waitKey(1);
+        cv::imshow("frame", frame);
+        // std::cout<<"frame size: "<<frame.size()<<std::endl;
+        cv::waitKey(1);
         mat_queue.pop();
         lock.unlock();
     }
