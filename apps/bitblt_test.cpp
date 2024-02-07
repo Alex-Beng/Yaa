@@ -141,8 +141,8 @@ bool bb_capture(HWND& giHandle, cv::Mat& frame) {
 }
 
 // 截屏和对应的时间戳
-// std::queue<std::pair<cv::Mat, long long>> mat_queue;
-std::queue<cv::Mat> mat_queue;
+std::queue<std::pair<cv::Mat, long long>> mat_queue;
+// std::queue<cv::Mat> mat_queue;
 std::mutex mat_mtx;
 std::condition_variable mat_cv;
 
@@ -176,9 +176,11 @@ void producer(std::chrono::steady_clock::time_point start_time) {
         auto curr_time_stamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_time).count();
         bb_capture(window_handle, frame);
         {
-            // std::lock_guard<std::mutex> lock(mat_mtx);
-            // mat_queue.push({frame, curr_time_stamp});
-            mat_queue.push(frame);
+            std::lock_guard<std::mutex> lock(mat_mtx);
+            // mat_queue.push(frame);
+            mat_queue.push(
+                std::make_pair(frame, curr_time_stamp)
+            );
         }
         // mat_cv.notify_one();
         auto iter_end = std::chrono::high_resolution_clock::now();
@@ -198,22 +200,27 @@ void producer(std::chrono::steady_clock::time_point start_time) {
 
 void consumer() {
     cv::namedWindow("frame", cv::WINDOW_NORMAL);
-    while (true) {
+    int frame_count = 0;
+    auto N = 1000;
+    // while (true) {
+    for (int i = 0; i < N; i++) {
         std::unique_lock<std::mutex> lock(mat_mtx);
         mat_cv.wait(lock, []{ return !mat_queue.empty(); });
         // if (mat_queue.empty()) {
         // 	std::this_thread::sleep_for(std::chrono::milliseconds(40));
         // 	continue;
         // }
-        cv::Mat frame = mat_queue.front();
-        // cv::Mat frame = mat_queue.front().first;
-        // long long time_stamp = mat_queue.front().second;
+        // cv::Mat frame = mat_queue.front();
+        cv::Mat frame = mat_queue.front().first;
+        long long time_stamp = mat_queue.front().second;
         cv::imshow("frame", frame);
         // std::cout<<"frame size: "<<frame.size()<<std::endl;
         cv::waitKey(1);
         mat_queue.pop();
+        frame_count++;
         lock.unlock();
     }
+    std::cout<<"frame count: "<<frame_count<<std::endl;
 }
 
 int main(int argc, char const *argv[]) {
