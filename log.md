@@ -1,4 +1,4 @@
-# 遥操作计划
+# ~~遥操作计划~~ 人类示范采集计划
 
 ~~rdp + 固定鼠标->相对鼠标映射。~~ rdp relative mouse太难用了
 ~~rdp启动+其他远控软件启动~~，似乎不能截屏，至少parsec不能。先放弃，因为远控软件不可控。
@@ -13,6 +13,19 @@ cpp的interception可以捕获dx dy 左右键 up down 以及 键盘的 up down~~
 对比：autohotkey使用windows的GetAsyncKeyState和GetRawInputData来捕获键盘和鼠标输入。
 ~~TODO：去除多余的键盘摁下事件。在录制or回放时候实现？录制！~~
 ~~TODO：对比开环误差。~~ 纯dx dy误差较小，联合误差相当大，-> 说明需要learning based！学， 给我狠狠地学！
+
+以完成基于interception的键盘鼠标录制。
+录制输出为jsonl。
+与VPT相同。
+录制内容为dx dy scancode + state + 时间戳。
+
+基于bitblt进行屏幕录制。
+目标：达到50Hz。
+录制输出为视频+对应帧的时间戳，考虑同样jsonl格式。
+直接保存jpg，1600x900的单帧在311 KB左右，一段60s，50Hz的jpg格式录制结果在0.9GB左右，不能接受。
+既然都有损了，还是直接上视频了。
+
+
 
 
 ## 环境依赖
