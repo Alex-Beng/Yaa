@@ -202,6 +202,20 @@ void consumer() {
     cv::namedWindow("frame", cv::WINDOW_NORMAL);
     int frame_count = 0;
     auto N = 1000;
+
+    auto videoname = "output.mp4";
+    // int fourcc = cv::VideoWriter::fourcc('h', '2',  '6', '4');
+    // int fourcc = cv::VideoWriter::fourcc('H', '2',  '6', '4');
+    // in BING COPILOT, H264 is same with AVC1
+    int fourcc = cv::VideoWriter::fourcc('A', 'V',  'C', '1');
+    int fps = 50;
+    int width = 1080;
+    int height = 900;
+    cv::VideoWriter writer = cv::VideoWriter(videoname, fourcc, fps, cv::Size(width, height));
+    if (!writer.isOpened()) {
+        std::cerr<<"cannot open video writer"<<std::endl;
+        return;
+    }
     // while (true) {
     for (int i = 0; i < N; i++) {
         std::unique_lock<std::mutex> lock(mat_mtx);
@@ -214,6 +228,9 @@ void consumer() {
         cv::Mat frame = mat_queue.front().first;
         long long time_stamp = mat_queue.front().second;
         cv::imshow("frame", frame);
+        // std::cout<<frame.size()<<std::endl;
+        if (i%100 == 0)
+            std::cout<<"time stamp: "<<time_stamp<<std::endl;
         // std::cout<<"frame size: "<<frame.size()<<std::endl;
         cv::waitKey(1);
         mat_queue.pop();
