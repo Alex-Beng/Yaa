@@ -204,14 +204,26 @@ void consumer() {
     auto N = 1000;
 
     auto videoname = "output.mp4";
+    auto alpha_videoname = "output_alpha.mp4";
     // int fourcc = cv::VideoWriter::fourcc('h', '2',  '6', '4');
     // int fourcc = cv::VideoWriter::fourcc('H', '2',  '6', '4');
     // in BING COPILOT, H264 is same with AVC1
-    int fourcc = cv::VideoWriter::fourcc('A', 'V',  'C', '1');
-    int fps = 50;
-    int width = 1080;
+    int fourcc = cv::VideoWriter::fourcc('a', 'v',  'c', '1');
+    // int fourcc = cv::VideoWriter::fourcc('M', 'J',  'P', 'G');
+    // int fourcc = cv::VideoWriter::fourcc('M', 'P', '4', 'V');
+
+    // H264 10944  KB
+    // MJPG 108411 KB
+    // MP4V 11875  KB
+    // versus JPG per frame 311000 KB = 311 KB * 20s * 50fps
+    // 使用H264
+
+    // 另一个writer保存alpha通道
+    double fps = 50.0;
+    int width = 1600;
     int height = 900;
     cv::VideoWriter writer = cv::VideoWriter(videoname, fourcc, fps, cv::Size(width, height));
+    cv::VideoWriter writer_alpha = cv::VideoWriter(alpha_videoname, fourcc, fps, cv::Size(width, height), false);
     if (!writer.isOpened()) {
         std::cerr<<"cannot open video writer"<<std::endl;
         return;
@@ -227,16 +239,30 @@ void consumer() {
         // cv::Mat frame = mat_queue.front();
         cv::Mat frame = mat_queue.front().first;
         long long time_stamp = mat_queue.front().second;
+        // split alpha channel
+        cv::Mat alpha;
+        cv::extractChannel(frame, alpha, 3);
+        writer_alpha.write(alpha);
+
+        // convert 4 channel to 3 channel
+        // otherwise, the video writer will not work
+        cv::cvtColor(frame, frame, cv::COLOR_BGRA2BGR);
+
         cv::imshow("frame", frame);
+        writer.write(frame);
+
         // std::cout<<frame.size()<<std::endl;
-        if (i%100 == 0)
+        if (i%100 == 0) {
             std::cout<<"time stamp: "<<time_stamp<<std::endl;
-        // std::cout<<"frame size: "<<frame.size()<<std::endl;
+            std::cout<<"frame size: "<<frame.size()<<std::endl;
+        }
         cv::waitKey(1);
         mat_queue.pop();
         frame_count++;
         lock.unlock();
     }
+    writer.release();
+    cv::destroyAllWindows();
     std::cout<<"frame count: "<<frame_count<<std::endl;
 }
 

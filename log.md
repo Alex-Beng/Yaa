@@ -27,6 +27,10 @@ cpp的interception可以捕获dx dy 左右键 up down 以及 键盘的 up down~~
 格式与OBS录屏保持一致，.mkv + H.264
 
 
+经过对比，H264压缩率较好，使用！
+
+输出为三通道+alpha通道视频+对应时间戳。
+
 
 ## 环境依赖
 
@@ -36,27 +40,16 @@ nlohmann/json -> 自动安装
 
 OpenCV -> 手动安装
 
+H.264需要**手动下载**codec，这个与opencv版本相关。
 
 
+~~在遥端跑genshin和yap，以实现自动拾取和自动tp。~~
+~~遥端TODO：自动化的tp？~~
 
+~~主端进行截屏和post 键盘鼠标message到rdp窗口。~~
 
+通过录制进行演示，rdp帧率实在是不行。
 
-在遥端跑genshin和yap，以实现自动拾取和自动tp。
-遥端TODO：自动化的tp？
-
-主端进行截屏和post 键盘鼠标message到rdp窗口。
-
-# rdp 遥操作配置log
-
-https://github.com/Night-stars-1/Auto_Simulated_Universe_Docs/blob/docs/docs/guide/bs.md
-
-
-使用多用户rdp至同一台电脑，
-实现yap在遥端运行，
-Yaa在主端采集图像和操作数据。
-
-rdp还需要relative鼠标输入。
-https://github.com/xyzlancehe/rdp_relative_mouse
 
 
 # ALOHA & Mobile ALOHA read note
