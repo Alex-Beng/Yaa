@@ -238,6 +238,13 @@ void consumer() {
         // }
         // cv::Mat frame = mat_queue.front();
         cv::Mat frame = mat_queue.front().first;
+        // check size and make it same with (width, height)
+        if (frame.cols != width || frame.rows != height) {
+            // resize it silently
+            // std::cout<<"need resize"<<std::endl;
+            cv::resize(frame, frame, cv::Size(width, height));
+        }
+
         long long time_stamp = mat_queue.front().second;
         // split alpha channel
         cv::Mat alpha;
