@@ -151,8 +151,21 @@ void test_send() {
     }
 }
 
-int main() {
-    // test_listen();
-    test_send();
+int main(int argc, char const *argv[]) {
+    if (argc < 2) {
+        std::cout << "Usage: ms_kb_test [listen|send]" << std::endl;
+        return 0;
+    }
+    std::string mode = argv[1];
+    if (mode == "listen") {
+        test_listen();
+    }
+    else if (mode == "send") {
+        test_send();
+    }
+    else {
+        std::cout << "Usage: ms_kb_test [listen|send]" << std::endl;
+        return -1; 
+    }
     return 0;
 }
