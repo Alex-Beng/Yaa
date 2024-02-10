@@ -11,5 +11,6 @@ foreach(sourcefile ${SOURCES})
         interception 
         nlohmann_json::nlohmann_json 
         ${OpenCV_LIBS}
+        CLI11::CLI11
     )
 endforeach(sourcefile ${SOURCES})
