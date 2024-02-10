@@ -32,6 +32,10 @@ cpp的interception可以捕获dx dy 左右键 up down 以及 键盘的 up down~~
 输出为三通道+alpha通道视频+对应时间戳。
 
 
+
+有没有抽象的必要？
+抽象个utils吧，看着难受。
+
 ## 环境依赖
 
 interception -> 自动安装
