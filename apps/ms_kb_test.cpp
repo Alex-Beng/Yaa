@@ -52,7 +52,7 @@ void test_send() {
     // 用于测试发送
     InterceptionContext ctx = interception_create_context();
     InterceptionDevice device;
-    InterceptionStroke stroke;
+    // InterceptionStroke stroke;
 
     if (false) {        
         // 测试输入wasd、空格、esc、12

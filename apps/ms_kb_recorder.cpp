@@ -97,7 +97,7 @@ void record() {
 }
 
 void process_event_time(std::vector<ABEvent>& events) {
-    for (int i = events.size() - 1; i >= 1; i--) {
+    for (auto i = events.size() - 1; i >= 1; i--) {
         events[i].timestamp -= events[i - 1].timestamp;
     }
     events[0].timestamp = 0;
