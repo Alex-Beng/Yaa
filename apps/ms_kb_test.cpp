@@ -133,18 +133,18 @@ void test_send() {
     mstroke.state = INTERCEPTION_MOUSE_MOVE_RELATIVE;
     mstroke.flags = 0;
     mstroke.rolling = 0;
-    mstroke.x = 100;
+    mstroke.x = 50;
     mstroke.y = 0;
     mstroke.information = 0;
     interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&mstroke), 1);
 
     countdown(2);
-    auto send_n = 5;
+    auto send_n = 2;
     for (auto i=0; i<send_n; i++) {
         mstroke.state = INTERCEPTION_MOUSE_MOVE_RELATIVE;
         mstroke.flags = 0;
         mstroke.rolling = 0;
-        mstroke.x = -100/send_n;
+        mstroke.x = -50/send_n;
         mstroke.y = 0;
         mstroke.information = 0;
         interception_send(ctx, device, reinterpret_cast<InterceptionStroke *>(&mstroke), 1);
