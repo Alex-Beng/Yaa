@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <set>
 #include <vector>
 #include <string>
 #include <thread>
@@ -59,6 +60,17 @@ enum SCANCODE {
     SCANCODE_F5 = 0x3F,
     SCANCODE_F6 = 0x40,
 };
+
+// make SCANCODE to a set
+// for recording Keys of Interest (KOI!)
+std::set<SCANCODE> scancode_set = {
+    SCANCODE_Q, SCANCODE_W, SCANCODE_E, SCANCODE_R, SCANCODE_T, SCANCODE_Y, SCANCODE_I, SCANCODE_O, SCANCODE_P,
+    SCANCODE_A, SCANCODE_S, SCANCODE_D, SCANCODE_F, SCANCODE_G, SCANCODE_H, SCANCODE_J, SCANCODE_L,
+    SCANCODE_Z, SCANCODE_X, SCANCODE_C, SCANCODE_V, SCANCODE_B, SCANCODE_N, SCANCODE_M,
+    SCANCODE_ESC, SCANCODE_1, SCANCODE_2, SCANCODE_3, SCANCODE_4, SCANCODE_SPACE, SCANCODE_LSHIFT, SCANCODE_LTAB, SCANCODE_LALT, SCANCODE_LCTRL,
+    SCANCODE_F1, SCANCODE_F2, SCANCODE_F3, SCANCODE_F4, SCANCODE_F5, SCANCODE_F6
+};
+
 
 void countdown(int seconds) {
     for (int i = seconds; i >= 0; i--) {
