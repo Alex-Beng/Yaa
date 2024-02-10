@@ -13,11 +13,27 @@ cpp的interception可以捕获dx dy 左右键 up down 以及 键盘的 up down~~
 对比：autohotkey使用windows的GetAsyncKeyState和GetRawInputData来捕获键盘和鼠标输入。
 ~~TODO：去除多余的键盘摁下事件。在录制or回放时候实现？录制！~~
 ~~TODO：对比开环误差。~~ 纯dx dy误差较小，联合误差相当大，-> 说明需要learning based！学， 给我狠狠地学！
+猜测误差主要来源于replay？从驱动层replay相当于bottom up？既要经过驱动又要经过OS？
+
+## SOME RESULTS in intercption test
+
+重放用时而言，重放完毕用时大概是录制用时的两倍。
+在将事件之间记录的延时减半之后，依旧在录制用时的两倍左右，说明事件之间手动的sleep并不是关键路径，
+而可能是interception库的发送事件的效率问题。
+TODO：对比OS的事件发送效率。which is the same with AutoHotKey.
+
+此外，对于鼠标，一次移动x，和分n次移动-x//n，偏差在
 
 以完成基于interception的键盘鼠标录制。
 录制输出为jsonl。
 与VPT相同。
 录制内容为dx dy scancode + state + 时间戳。
+
+高精度时 in msvc_chron.h 
+"using high_resolution_clock = steady_clock;"
+NMD 就是别名
+三个clock，high_resolution_clock, system_clock, steady_clock
+system_clock 单位是100ns，剩下两个一样
 
 基于bitblt进行屏幕录制。
 目标：达到50Hz。
