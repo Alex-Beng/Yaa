@@ -26,6 +26,7 @@ Yet Another Artificial GI-player
     - [ ] ~~基于asyncio的窗口遥操作~~
         - [x] 窗口捕获
         - [x] 获取键鼠
+        - [ ] 内插/采样到20Hz
         - [ ] ~~转发键鼠~~
 - [ ] 训练，训练，训练，还是TMD训练
     - [ ] all end 2 end / 拆分
