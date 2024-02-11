@@ -76,6 +76,8 @@ H.264需要**手动下载**codec，这个与opencv版本相关。
 通过录制进行演示，rdp帧率实在是不行。
 截屏和键鼠捕获频率均能达到50Hz，可以接受。
 
+实测截屏只能到20Hz。
+
 
 
 # ALOHA & Mobile ALOHA read note
