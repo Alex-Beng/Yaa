@@ -55,7 +55,7 @@ struct BBCaptureConfig
 // thread 0
 // bb capture producer
 void bb_capture_producer(HWND& window_handle, std::chrono::steady_clock::time_point start_time) {
-    auto freme_cnt = 0;
+    auto frame_cnt = 0;
     while (is_recording) {
         cv::Mat frame;
         auto curr_time = std::chrono::high_resolution_clock::now();
@@ -68,16 +68,16 @@ void bb_capture_producer(HWND& window_handle, std::chrono::steady_clock::time_po
             );
         }
         mat_cv.notify_one();
-        freme_cnt++;
+        frame_cnt++;
     }
     // only print in the end
-    std::cout<<"bb_capture_producer: "<<freme_cnt<<std::endl;
+    std::cout<<"bb_capture_producer: "<<frame_cnt<<std::endl;
 }
 
 // thread 1
 // bb capture consumer
 void bb_capture_consumer(BBCaptureConfig& config) {
-    auto freme_cnt = 0;
+    auto frame_cnt = 0;
     // init writers
     auto writer_rgb = cv::VideoWriter(
         config.output_path + "/" + config.task_name + "/" + std::to_string(config.episode_id) + ".mp4",
@@ -123,7 +123,7 @@ void bb_capture_consumer(BBCaptureConfig& config) {
         mat_queue.pop();
         lock.unlock();
         // do something with frame
-        freme_cnt++;
+        frame_cnt++;
     }
     // release writer
     writer_rgb.release();
@@ -142,7 +142,7 @@ void bb_capture_consumer(BBCaptureConfig& config) {
         file << j.dump() << std::endl;
     }
     // only print in the end
-    std::cout<<"bb_capture_consumer: "<<freme_cnt<<std::endl;
+    std::cout<<"bb_capture_consumer: "<<frame_cnt<<std::endl;
 }
 
 // thread 2
