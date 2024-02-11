@@ -11,3 +11,4 @@ build
 *.tar
 *.gz
 *.7z
+*.bz2
