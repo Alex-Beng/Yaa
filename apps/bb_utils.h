@@ -4,8 +4,10 @@
 #include <opencv2/opencv.hpp>
 #include <Windows.h>
 
-// find widow handle
+// timestamp data structure
+typedef long long BBTimeStamp;
 
+// find widow handle
 bool find_window_local(HWND& ret_handle) {
     std::wstring wide = L"原神";
     std::wstring class_name = L"UnityWndClass";
