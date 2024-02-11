@@ -230,7 +230,8 @@ void read_config(int argc, char const *argv[], BBCaptureConfig& config) {
     app.add_option("-t,--task_name", config.task_name, "task_name")
         ->required();
     app.add_option("-e,--episode_id", config.episode_id, "episode_id")
-        ->required();
+        ->required(false)
+        ->default_val(-1);
 
     try {
         app.parse(argc, argv);
@@ -241,11 +242,33 @@ void read_config(int argc, char const *argv[], BBCaptureConfig& config) {
     }
 }
 
+int auto_indexing(BBCaptureConfig& config) {
+    // checking max.mp4 in config.output_path / 
+    auto max_idx = 1000;
+
+    auto output_folder = config.output_path + "/" + config.task_name;
+    if (!std::filesystem::exists(output_folder)) {
+        std::filesystem::create_directories(output_folder);
+    }
+    for (auto i = 0; i < max_idx; i++) {
+        auto i_video = config.output_path + "/" + config.task_name + "/" + std::to_string(i) + ".mp4";
+        if (!std::filesystem::exists(i_video)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int main(int argc, char const *argv[]) {
     // read bb capture config from argv using CLI11
     CLI::App app{"yaa_recorder"};
     BBCaptureConfig config;
     read_config(argc, argv, config);
+
+    if (config.episode_id == -1) {
+        std::cout << "trying to auto indexing" << std::endl;
+        config.episode_id = auto_indexing(config);
+    }
     // config.print();
 
     // check path exist
