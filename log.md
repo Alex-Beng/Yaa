@@ -8,6 +8,8 @@
 pynput无法直接捕获鼠标dx dy，只能捕获绝对位置。相对位置通过差分，在屏幕边缘效果很差。
 放弃python进行捕获
 cpp的interception可以捕获dx dy 左右键 up down 以及 键盘的 up down~~（需要测试）~~ 测试见apps/ms_kb_test，均可捕获。
+捕获频率最高在125Hz左右，可以接受。
+TODO: 需要验证
 
 测试interception的dx dy和键盘输入。
 对比：autohotkey使用windows的GetAsyncKeyState和GetRawInputData来捕获键盘和鼠标输入。
@@ -72,6 +74,7 @@ H.264需要**手动下载**codec，这个与opencv版本相关。
 ~~主端进行截屏和post 键盘鼠标message到rdp窗口。~~
 
 通过录制进行演示，rdp帧率实在是不行。
+截屏和键鼠捕获频率均能达到50Hz，可以接受。
 
 
 
