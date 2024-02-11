@@ -57,6 +57,13 @@ TODO：对比OS的事件发送效率。which is the same with AutoHotKey.
 SOLUTION：将Windows的鼠标设置中的“提高指针精确度”关闭，可以显著降低偏差。
 
 
+截屏采集结果频率在20Hz左右，可以接受。
+直接降频推理得了，反正VPT也是20Hz。
+键鼠采集结果频率在80Hz左右，可以接受。
+
+![video_diff_timing](./pics/video_diff_timing.png)
+![ms_kb_diff_timing](./pics/ms_kb_diff_timing.png)
+
 ## 环境依赖
 
 interception -> 自动安装
