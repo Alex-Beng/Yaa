@@ -15,7 +15,7 @@ Yet Another Artificial GI-player
 - [ ] 怎么抄？
   - [ ] 尝试先去掉VAE的encoder进行训练
 - [ ] 定义输入和输出
-    - [ ] in: 图像~~+感知状态~~
+    - [ ] in: 图像+感知状态
     - [ ] out: 动作
 - [ ] 图像
   - [ ] 主画面+EQ+小地图
@@ -27,7 +27,7 @@ Yet Another Artificial GI-player
     - [ ] ~~基于asyncio的窗口遥操作~~
         - [x] 窗口捕获
         - [x] 获取键鼠
-        - [ ] 内插/采样到20Hz
+        - [ ] 内插/采样/重放到20Hz，类似act的record sim episodes
         - [ ] ~~转发键鼠~~
 - [ ] 训练，训练，训练，还是TMD训练
     - [ ] all end 2 end / 拆分
