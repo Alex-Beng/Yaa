@@ -41,9 +41,10 @@ system_clock 单位是100ns，剩下两个一样
 输出为三通道+alpha通道视频+对应时间戳。
 
 
-
 有没有抽象的必要？
 抽象个utils吧，看着难受。
+
+重新采样到hdf5，抄act的record sim episodes。
 
 ## SOME RESULTS in intercption test
 
@@ -66,6 +67,8 @@ SOLUTION：将Windows的鼠标设置中的“提高指针精确度”关闭，�
 
 ## 环境依赖
 
+cpp的
+
 interception -> 自动安装
 
 nlohmann/json -> 自动安装
@@ -74,6 +77,13 @@ OpenCV -> 手动安装
 
 H.264需要**手动下载**codec，这个与opencv版本相关。
 
+python的
+
+目前与act一致。见[act install](https://github.com/tonyzhaozh/act?tab=readme-ov-file#installation)。
+
+
+
+## 一些大声BB
 
 ~~在遥端跑genshin和yap，以实现自动拾取和自动tp。~~
 ~~遥端TODO：自动化的tp？~~
