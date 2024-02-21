@@ -28,9 +28,12 @@ Yet Another Artificial GI-player
         - [x] 窗口捕获
         - [x] 获取键鼠
         - [ ] 内插/采样/重放到20Hz，类似act的record sim episodes
+        - [ ] 训练数据可视化，类似act的visualize episodes
         - [ ] ~~转发键鼠~~
-- [ ] 训练，训练，训练，还是TMD训练
+- [ ] 训练
     - [ ] all end 2 end / 拆分
+      - [ ] 首先尝试稻妻好感
+      - [ ] 尝试固定c位+每日的e2e？
     - [ ] 任务s
         - [ ] 稻妻两个固定位置好感
         - [ ] 进行深渊的打
