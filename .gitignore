@@ -12,3 +12,5 @@ build
 *.gz
 *.7z
 *.bz2
+__pycache__
+*.pyc
