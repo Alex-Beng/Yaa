@@ -12,8 +12,7 @@ Yet Another Artificial GI-player
 
 # TODOs
 
-- [ ] 怎么抄？
-  - [ ] 尝试先去掉VAE的encoder进行训练
+
 - [ ] 定义输入和输出
     - [ ] in: 图像+感知状态
     - [ ] out: 动作
