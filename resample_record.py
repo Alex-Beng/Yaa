@@ -16,10 +16,9 @@ observations
 - images
     - full_gray_view    (480, 640, 3) 'uint8'
     - full_alpha_view   (480, 640, 3) 'uint8'
-- qpos                  (14,)         'float64'
-- qvel                  (14,)         'float64'
+- mskb_status           (19,)         'float64'
 
-action                  (14,)         'float64'
+mskb_status             (19,)         'float64'
 """
 import os
 import json
