@@ -44,7 +44,23 @@ system_clock 单位是100ns，剩下两个一样
 有没有抽象的必要？
 抽象个utils吧，看着难受。
 
+
+## traning data resample
+
 重新采样到hdf5，抄act的record sim episodes。
+
+使用同样的4:3 x 3?
+
+实际感兴趣的键盘事件（用来确定状态）
+
+W A S D Q E
+X space shift T Z
+1 2 3 4
+鼠标左键 滚轮 dx dy
+
+state dim = 19
+
+
 
 ## SOME RESULTS in intercption test
 
