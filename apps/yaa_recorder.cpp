@@ -175,8 +175,14 @@ void ms_kb_recorder(BBCaptureConfig& config, std::chrono::steady_clock::time_poi
             // do something with mouse stroke
             event.timestamp = curr_timestamp;
             event.type = EVENT_TYPE_MOUSE;
-            event.mouse.dx = mstroke.x;
-            event.mouse.dy = mstroke.y;
+            if (mstroke.state == INTERCEPTION_MOUSE_WHEEL) {
+                event.mouse.dx = 0;
+                event.mouse.dy = mstroke.rolling;
+            }
+            else {
+                event.mouse.dx = mstroke.x;
+                event.mouse.dy = mstroke.y;
+            }
             event.mouse.event_type = mstroke.state;
         }
         else if (interception_is_keyboard(device)) {

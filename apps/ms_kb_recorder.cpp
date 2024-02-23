@@ -59,8 +59,14 @@ void record() {
             // std::cout << "state : " << mstroke.state << ", flags : " << mstroke.flags << ", rolling : " << mstroke.rolling << ", x : " << mstroke.x << ", y : " << mstroke.y << ", information : " << mstroke.information << std::endl;
 
             event.type = EVENT_TYPE_MOUSE;
-            event.mouse.dx = mstroke.x;
-            event.mouse.dy = mstroke.y;
+            if (mstroke.state == INTERCEPTION_MOUSE_WHEEL) {
+                event.mouse.dx = 0;
+                event.mouse.dy = mstroke.rolling;
+            }
+            else {
+                event.mouse.dx = mstroke.x;
+                event.mouse.dy = mstroke.y;
+            }
             event.mouse.event_type = mstroke.state;
         }
 
