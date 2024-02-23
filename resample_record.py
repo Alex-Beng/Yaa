@@ -22,10 +22,12 @@ mskb_status             (19,)         'float64'
 """
 import os
 import json
+import time
+from copy import deepcopy
 
 import cv2
 
-from constants import DT
+from constants import DT, STATE_DIM, SC_sc2idx, SC_idx2sc, SN_idx2key, SN
 
 def read_jsonl(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -106,25 +108,28 @@ def get_sample_timestamps(record_folder, idx):
             t_v_idx += 1
     
         video_sample_idx.append(t_v_idx - 1)
-        
+    assert len(sample_timestamps) == len(video_sample_idx)
     return sample_timestamps, video_sample_idx
 
 
 def do_sample(record_folder, idx, tss, video_samp_idxs):
-    
     # for video, just sample the nearest frame
     # for mskb, accumulate the events in the gap
     sampled_video_frames = []
+    sampled_video_frames_idx = []
     sampled_mskb_events = []
 
     # sample the frames first
     print(f"Sampling video {idx}...")
+    t0 = time.time()
     rgb_video_path = os.path.join(record_folder, f'{idx}.mp4')
     alpha_video_path = os.path.join(record_folder, f'{idx}_alpha.mp4')
     rgb_cap = cv2.VideoCapture(rgb_video_path)
     alpha_cap = cv2.VideoCapture(alpha_video_path)
-    frame_cnt = 0
-    debug = True
+    frame_cnt = -1
+    # 由于set会去重，所以维护一个head作为samp_idxs的索引
+    video_samped_head = 0
+    debug = False
     if debug:
         cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
         cv2.namedWindow('alpha', cv2.WINDOW_NORMAL)
@@ -133,36 +138,178 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
         ret_alpha, alpha_frame = alpha_cap.read()
         if not ret or not ret_alpha:
             break
-        if frame_cnt in video_samp_idxs:
+        frame_cnt += 1
+        # print(f'frame_cnt: {frame_cnt}, video_samped_head: {video_samped_head}, video_samp_idxs[video_samped_head]: {video_samp_idxs[video_samped_head]}')
+        if frame_cnt < video_samp_idxs[video_samped_head]:
+            continue
+        elif frame_cnt == video_samp_idxs[video_samped_head]:
             if debug:
                 cv2.imshow('frame', frame)
                 cv2.imshow('alpha', alpha_frame)
             frame = cv2.resize(frame, (640, 480))
             alpha_frame = cv2.resize(alpha_frame, (640, 480))
-            sampled_video_frames.append((
-                frame, alpha_frame
-            ))
+            # 因为可能存在多个采样点对应同一帧，所以这里用while
+            while video_samped_head < len(video_samp_idxs) and \
+                frame_cnt == video_samp_idxs[video_samped_head]:
 
+                sampled_video_frames.append((frame, alpha_frame))
+                sampled_video_frames_idx.append(frame_cnt)
+                video_samped_head += 1
+        
+        if video_samped_head >= len(video_samp_idxs):
+            # 实际无需判断，在生成video_samp_idxs时已经保证了
+            break
+        
         if debug and cv2.waitKey(1) & 0xFF == ord('q'):
             break
-        frame_cnt += 1
-    
+
+    # cost time
+    print(f'video cost time: {time.time() - t0}')
+    # replay the video
+    if debug:
+        for frame, alpha_frame in sampled_video_frames:
+            cv2.imshow('frame', frame)
+            cv2.imshow('alpha', alpha_frame)
+            if cv2.waitKey(50) & 0xFF == ord('q'):
+                break
+
+
     # then sample mskb 
     print(f"Sampling mskb {idx}...")
+    t0 = time.time()
     # 首先抛弃掉tts[0]时刻之前的msbk事件
     t_mskb_idx = 0
     mskb_jsonl_path  = os.path.join(record_folder, f'{idx}_mskb.jsonl')
     all_mskb_events = list(read_jsonl(mskb_jsonl_path))
     while all_mskb_events[t_mskb_idx]['timestamp'] < tss[0]:
         t_mskb_idx += 1
+    print(f'len tss: {len(tss)}')
     # 然后开始采样
     for ts in tss:
+        curr_events = []
+        while all_mskb_events[t_mskb_idx]['timestamp'] < ts:
+            curr_events.append(all_mskb_events[t_mskb_idx])
+            t_mskb_idx += 1
+        # accumulate the events to one
+        # 经过测试，在关闭提高鼠标精确度的设置后，鼠标的移动满足可叠加性
+        # 所以直接叠加
+        # 引入假设，在O中叠加性也是成立的
+            
+        # 初值不应为0，应维持上一次的状态
+        if len(sampled_mskb_events) == 0:
+            event_state = [0] * STATE_DIM
+        else:
+            event_state = deepcopy(sampled_mskb_events[-1])
+            # 设置鼠标的移动为0
+            event_state[SN['Mdx']] = 0
+            event_state[SN['Mdy']] = 0
+            event_state[SN['MRo']] = 0
+
+        click_cnt = 0
+        for event in curr_events:
+            if event["type"] == 'keyboard':
+                # 如果是KOI
+                if event['scancode'] in SC_sc2idx:
+                    # 如果是摁下
+                    if event['event_type'] == 0:
+                        event_state[SC_sc2idx[event['scancode']]] = 1
+                    else:
+                        # 如果是松开，print看看
+                        if event_state[SC_sc2idx[event['scancode']]] == 1:
+                            click_cnt += 1
+                            print(f'event click key: {SN_idx2key[SC_sc2idx[event["scancode"]]]}')
+                        event_state[SC_sc2idx[event['scancode']]] = 0
+            elif event["type"] == 'mouse':
+                # 如果是鼠标移动
+                if event['event_type'] == 0:
+                    event_state[SN['Mdx']] += event['dx']
+                    event_state[SN['Mdy']] += event['dy']
+                # 如果是左键摁下 / 松开
+                elif event['event_type'] == 1:
+                    event_state[SN['ML']] = 1
+                elif event['event_type'] == 2:
+                    if event_state[SN['ML']] == 1:
+                        click_cnt += 1
+                        print(f'event click left mouse')
+                    event_state[SN['ML']] = 0
+                # 如果是右键摁下 / 松开
+                # 转换为Lshift的摁下 / 松开
+                elif event['event_type'] == 4:
+                    event_state[SN['LS']] = 1
+                elif event['event_type'] == 8:
+                    if event_state[SN['LS']] == 1:
+                        click_cnt += 1
+                        print(f'event click right mouse')
+                    event_state[SN['LS']] = 0
+                # 如果是滚轮滚动
+                elif event['event_type'] == 1024:
+                    event_state[SN['MRo']] += event['dy']//120
+                # middle button not in KOI
+        sampled_mskb_events.append(event_state)
+        # print(f'event_state: {event_state}')
+        if click_cnt > 0:
+            print(f'click_cnt: {click_cnt}')
+    # cost time
+    print(f'mskb cost time: {time.time() - t0}')
+    # print sampel frames & actions len
+    print(f'len(sampled_video_frames): {len(sampled_video_frames)}')
+    print(f'len(sampled_mskb_events): {len(sampled_mskb_events)}')
+    print(sampled_mskb_events[:5])
+
+    # replay the video
+    if debug:
+        repaly_sampled_video_and_mskb(sampled_video_frames, sampled_mskb_events)
         
+    # save to hdf5 like act
+    save_to_hdf5(sampled_video_frames, sampled_mskb_events)
+
+
+def state_to_str(state, former_state):
+    # for mouse, show dx dy ml mro
+    mouse_str = f'Mdx: {state[SN["Mdx"]]}, Mdy: {state[SN["Mdy"]]}, ML: {state[SN["ML"]]}, MRo: {state[SN["MRo"]]}'
+    # for keyboard, show the change-state keys
+    key_str = ''
+    for i in range(14):
+        if state[i] != former_state[i]:
+            key_str += f'{SN_idx2key[i]} is {"press" if state[i] == 1 else "release"}; '
+
+    return mouse_str, key_str
+
+
+def repaly_sampled_video_and_mskb(sampled_video_frames, sampled_mskb_events):
+    assert len(sampled_video_frames) == len(sampled_mskb_events)
+    replay_len = len(sampled_video_frames)
+    # replay the video
+    keyboard_state = [0] * 14
+    for i in range(replay_len):
+        frame, alpha_frame = sampled_video_frames[i]
+        state = sampled_mskb_events[i]
         
-    
-    
-    
+        # 分两行字显示鼠标和键盘事件
+        mouse_str, key_str = state_to_str(state, keyboard_state)
+        keyboard_state = state
+        # cv2.putText(frame, mouse_str, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        cv2.putText(frame, key_str, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+        cv2.imshow('frame', frame)
+
+        dx, dy = state[SN['Mdx']], state[SN['Mdy']]
+        # 根据dx，dy在图像中间绘制一个箭头
+        cv2.arrowedLine(frame, (320, 240), (320+dx, 240+dy), (0, 255, 0), 2)
+        cv2.imshow('frame', frame)
+
+        if key_str != "":
+            cv2.waitKey(0)
+            continue
+        if cv2.waitKey(50) & 0xFF == ord('q'):
+            break
     pass
+
+def save_to_hdf5(sampled_video_frames, sampled_mskb_events, record_folder, idx):
+    # 直接和record放一个文件夹力，命名为{idx}.hdf5
+    data_dict = {
+        
+    }
+
 
 def main(output_path: str, task_name: str):
     # 自适应查找各个录制。
@@ -171,7 +318,7 @@ def main(output_path: str, task_name: str):
         print(f'Error: {record_folder} not exists.')
         return
     # trying idx in [i, +inf)
-    idx = 0
+    idx = 1
     while True:
         if not check_record_idx(record_folder, idx):
             print(f'Error: {record_folder}/{idx} not exists.')   
@@ -185,7 +332,10 @@ def main(output_path: str, task_name: str):
         # <space> means sample gaps
         
         samp_tts, video_samp_idxs = get_sample_timestamps(record_folder, idx)
-        video_samp_idxs = set(video_samp_idxs)
+        # print(f'len(samp_tts): {len(samp_tts)}')
+        # video_samp_idxs = set(video_samp_idxs)
+        # print(f'len(video_samp_idxs): {len(video_samp_idxs)}')
+        # 草，set之后变短了，说明有重复的
 
         do_sample(record_folder, idx, samp_tts, video_samp_idxs)
 
