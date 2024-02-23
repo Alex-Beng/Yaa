@@ -60,6 +60,23 @@ X space shift T Z
 
 state dim = 19
 
+目前采集中约10min只出现了一次在0.05s内click的情况，
+因此考虑直接不响应click事件，只响应up down事件。
+
+keyboard event: scancode + 0/1. 0 for down, 1 for up
+mouse event: state = 0/1/2/4/8/16/32/1024
+
+|state|event|
+|---|---|
+|0| move, dx, dy|
+|1| left down|
+|2| left up|
+|4| right down|
+|8| right up|
+|16| middle down|
+|32| middle up|
+|1024| wheel, rolling, <0 for down, >0 for up, K*120 for rolling|
+
 
 
 ## SOME RESULTS in intercption test
