@@ -16,3 +16,4 @@ build
 *.bz2
 __pycache__
 *.pyc
+*.log
