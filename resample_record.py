@@ -119,27 +119,47 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
 
     # sample the frames first
     print(f"Sampling video {idx}...")
-    video_path = os.path.join(record_folder, f'{idx}.mp4')
-    cap = cv2.VideoCapture(video_path)
+    rgb_video_path = os.path.join(record_folder, f'{idx}.mp4')
+    alpha_video_path = os.path.join(record_folder, f'{idx}_alpha.mp4')
+    rgb_cap = cv2.VideoCapture(rgb_video_path)
+    alpha_cap = cv2.VideoCapture(alpha_video_path)
     frame_cnt = 0
-    debug = False
+    debug = True
     if debug:
         cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
+        cv2.namedWindow('alpha', cv2.WINDOW_NORMAL)
     while True:
-        ret, frame = cap.read()
-        if not ret:
+        ret, frame = rgb_cap.read()
+        ret_alpha, alpha_frame = alpha_cap.read()
+        if not ret or not ret_alpha:
             break
         if frame_cnt in video_samp_idxs:
             if debug:
                 cv2.imshow('frame', frame)
+                cv2.imshow('alpha', alpha_frame)
             frame = cv2.resize(frame, (640, 480))
-            sampled_video_frames.append(frame)
+            alpha_frame = cv2.resize(alpha_frame, (640, 480))
+            sampled_video_frames.append((
+                frame, alpha_frame
+            ))
+
         if debug and cv2.waitKey(1) & 0xFF == ord('q'):
             break
         frame_cnt += 1
     
     # then sample mskb 
     print(f"Sampling mskb {idx}...")
+    # 首先抛弃掉tts[0]时刻之前的msbk事件
+    t_mskb_idx = 0
+    mskb_jsonl_path  = os.path.join(record_folder, f'{idx}_mskb.jsonl')
+    all_mskb_events = list(read_jsonl(mskb_jsonl_path))
+    while all_mskb_events[t_mskb_idx]['timestamp'] < tss[0]:
+        t_mskb_idx += 1
+    # 然后开始采样
+    for ts in tss:
+        
+        
+    
     
     
     pass
