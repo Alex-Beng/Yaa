@@ -60,8 +60,9 @@ X space shift T Z
 
 state dim = 19
 
-目前采集中约10min只出现了一次在0.05s内click的情况，
+目前采集中约10min只出现了一次在0.05s内键盘click的情况，
 因此考虑直接不响应click事件，只响应up down事件。
+对于鼠标也是仅有一次click事件，因此也不响应click事件，只响应up down事件。
 
 keyboard event: scancode + 0/1. 0 for down, 1 for up
 mouse event: state = 0/1/2/4/8/16/32/1024
@@ -77,7 +78,10 @@ mouse event: state = 0/1/2/4/8/16/32/1024
 |32| middle up|
 |1024| wheel, rolling, <0 for down, >0 for up, K*120 for rolling|
 
+逆天，recorder写错了，wheel的rolling没有被记录。
 
+是否需要考虑归一化rolling dx dy？
+管他呢，先把丹练起来再说。
 
 ## SOME RESULTS in intercption test
 
