@@ -30,6 +30,8 @@ import h5py
 
 from constants import DT, STATE_DIM, SC_sc2idx, SC_idx2sc, SN_idx2key, SN, CAMERA_NAMES
 
+debug = False
+
 def read_jsonl(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         for line in f:
@@ -101,6 +103,9 @@ def get_sample_timestamps(record_folder, idx):
     # 生成采样点
     dt_in_ns = int(DT * 1e9)
     sample_timestamps = [ts for ts in range(start_ts, end_ts, dt_in_ns)]
+    
+    if debug:
+        sample_timestamps = sample_timestamps[:400]
 
     video_sample_idx = []
     t_v_idx = 0
@@ -133,7 +138,6 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
     
     # 由于set会去重，所以维护一个head作为samp_idxs的索引
     video_samped_head = 0
-    debug = False
     if debug:
         cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
         cv2.namedWindow('alpha', cv2.WINDOW_NORMAL)
