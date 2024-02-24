@@ -27,7 +27,7 @@ Yet Another Artificial GI-player
         - [x] 窗口捕获
         - [x] 获取键鼠
         - [x] ~~内插~~/采样/重放到20Hz，类似act的record sim episodes
-        - [ ] 训练数据可视化，类似act的visualize episodes
+        - [x] 训练数据可视化，类似act的visualize episodes
         - [ ] ~~转发键鼠~~
 - [ ] 训练
     - [ ] all end 2 end / 拆分
@@ -40,3 +40,5 @@ Yet Another Artificial GI-player
         - [ ] 从特定锚点出发拾取狗粮
         - [ ] 进行地脉的打
 - [ ] 评估方法？
+- [ ] 推理部署
+  - [ ] onnx部署+测试推理速度，需要达到20Hz
