@@ -3,7 +3,6 @@
 DT = 0.05
 
 # state name -> dim
-STATE_DIM = 19
 
 SN = {
     'W': 0,
@@ -26,6 +25,8 @@ SN = {
     'Mdx': 17,
     'Mdy': 18
 }
+
+STATE_DIM = len(SN)
 
 SN_idx2key = [
     'W', 
@@ -92,3 +93,18 @@ CAMERA_NAMES = [
     'rgb',
     'alpha'
 ]
+
+
+import os
+
+# Task config
+TASK_CONFIG = {
+    'test': {
+        # 'dataset_dir': os.path.join(__file__, './build/test'),
+        # 需要__file__的parent
+        'dataset_dir': os.path.join(os.path.dirname(__file__), './build/test'),
+        'num_episodes': 2,
+        'episode_len': 400, # TODO: fix in record
+        'camera_names': CAMERA_NAMES,
+    }
+}
