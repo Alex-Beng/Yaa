@@ -26,7 +26,7 @@ Yet Another Artificial GI-player
     - [ ] ~~基于asyncio的窗口遥操作~~
         - [x] 窗口捕获
         - [x] 获取键鼠
-        - [ ] 内插/采样/重放到20Hz，类似act的record sim episodes
+        - [x] ~~内插~~/采样/重放到20Hz，类似act的record sim episodes
         - [ ] 训练数据可视化，类似act的visualize episodes
         - [ ] ~~转发键鼠~~
 - [ ] 训练
