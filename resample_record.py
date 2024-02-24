@@ -104,8 +104,8 @@ def get_sample_timestamps(record_folder, idx):
     dt_in_ns = int(DT * 1e9)
     sample_timestamps = [ts for ts in range(start_ts, end_ts, dt_in_ns)]
     
-    if debug:
-        sample_timestamps = sample_timestamps[:400]
+    if True:
+        sample_timestamps = sample_timestamps[:300]
 
     video_sample_idx = []
     t_v_idx = 0
@@ -349,8 +349,8 @@ def save_to_hdf5(sampled_video_frames,
         image = obs.create_group('images')
         for cam_name in CAMERA_NAMES:
             image.create_dataset(cam_name, (max_timestamp, 480, 640, 3), dtype='uint8', chunks=(1, 480, 640, 3))
-        obs.create_dataset('state', (max_timestamp, 19), dtype='float64')
-        act = root.create_dataset('action', (max_timestamp, 19), dtype='float64')
+        obs.create_dataset('state', (max_timestamp, 19), dtype='float32')
+        act = root.create_dataset('action', (max_timestamp, 19), dtype='float32')
 
         for name, array in data_dict.items():
             print(name)
@@ -365,7 +365,7 @@ def main(output_path: str, task_name: str):
         print(f'Error: {record_folder} not exists.')
         return
     # trying idx in [i, +inf)
-    idx = 1
+    idx = 0
     while True:
         if not check_record_idx(record_folder, idx):
             print(f'Error: {record_folder}/{idx} not exists.')   
