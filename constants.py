@@ -88,3 +88,7 @@ SC_sc2idx = {
     # for mouse, there is no scancode
 }
 
+CAMERA_NAMES = [
+    'rgb',
+    'alpha'
+]

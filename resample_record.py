@@ -27,7 +27,7 @@ from copy import deepcopy
 
 import cv2
 
-from constants import DT, STATE_DIM, SC_sc2idx, SC_idx2sc, SN_idx2key, SN
+from constants import DT, STATE_DIM, SC_sc2idx, SC_idx2sc, SN_idx2key, SN, CAMERA_NAMES
 
 def read_jsonl(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -127,6 +127,7 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
     rgb_cap = cv2.VideoCapture(rgb_video_path)
     alpha_cap = cv2.VideoCapture(alpha_video_path)
     frame_cnt = -1
+    
     # 由于set会去重，所以维护一个head作为samp_idxs的索引
     video_samped_head = 0
     debug = False
@@ -177,7 +178,7 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
     # then sample mskb 
     print(f"Sampling mskb {idx}...")
     t0 = time.time()
-    # 首先抛弃掉tts[0]时刻之前的msbk事件
+    # 首先抛弃掉tts[0]时刻之前的msbk事件camera_names = ['rgb', 'alpha
     t_mskb_idx = 0
     mskb_jsonl_path  = os.path.join(record_folder, f'{idx}_mskb.jsonl')
     all_mskb_events = list(read_jsonl(mskb_jsonl_path))
@@ -261,7 +262,7 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
         repaly_sampled_video_and_mskb(sampled_video_frames, sampled_mskb_events)
         
     # save to hdf5 like act
-    save_to_hdf5(sampled_video_frames, sampled_mskb_events)
+    save_to_hdf5(sampled_video_frames, sampled_mskb_events, record_folder, idx)
 
 
 def state_to_str(state, former_state):
@@ -307,8 +308,12 @@ def repaly_sampled_video_and_mskb(sampled_video_frames, sampled_mskb_events):
 def save_to_hdf5(sampled_video_frames, sampled_mskb_events, record_folder, idx):
     # 直接和record放一个文件夹力，命名为{idx}.hdf5
     data_dict = {
-        
+        '/obs/state': [],
+        '/action': []
     }
+    for cam_name in CAMERA_NAMES:
+        data_dict[f'/obs/images/{cam_name}'] = []
+    print(data_dict.keys())
 
 
 def main(output_path: str, task_name: str):
