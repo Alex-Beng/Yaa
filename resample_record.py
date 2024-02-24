@@ -26,6 +26,7 @@ import time
 from copy import deepcopy
 
 import cv2
+import h5py
 
 from constants import DT, STATE_DIM, SC_sc2idx, SC_idx2sc, SN_idx2key, SN, CAMERA_NAMES
 
@@ -117,6 +118,8 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
     # for mskb, accumulate the events in the gap
     sampled_video_frames = []
     sampled_video_frames_idx = []
+    # 分别对应/obs/state和/action
+    sampled_mskb_states = []
     sampled_mskb_events = []
 
     # sample the frames first
@@ -149,6 +152,9 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
                 cv2.imshow('alpha', alpha_frame)
             frame = cv2.resize(frame, (640, 480))
             alpha_frame = cv2.resize(alpha_frame, (640, 480))
+            # 转换alpha为rgb
+            # alpha_frame = cv2.cvtColor(alpha_frame, cv2.COLOR_GRAY2BGR)
+            assert frame.shape == alpha_frame.shape
             # 因为可能存在多个采样点对应同一帧，所以这里用while
             while video_samped_head < len(video_samp_idxs) and \
                 frame_cnt == video_samp_idxs[video_samped_head]:
@@ -205,6 +211,8 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
             event_state[SN['Mdx']] = 0
             event_state[SN['Mdy']] = 0
             event_state[SN['MRo']] = 0
+        # 所以目前的event_state就是当前frame的状态
+        sampled_mskb_states.append(deepcopy(event_state))
 
         click_cnt = 0
         for event in curr_events:
@@ -254,6 +262,7 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
     print(f'mskb cost time: {time.time() - t0}')
     # print sampel frames & actions len
     print(f'len(sampled_video_frames): {len(sampled_video_frames)}')
+    print(f'len(sampled_mskb_states): {len(sampled_mskb_states)}')
     print(f'len(sampled_mskb_events): {len(sampled_mskb_events)}')
     print(sampled_mskb_events[:5])
 
@@ -262,7 +271,7 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
         repaly_sampled_video_and_mskb(sampled_video_frames, sampled_mskb_events)
         
     # save to hdf5 like act
-    save_to_hdf5(sampled_video_frames, sampled_mskb_events, record_folder, idx)
+    save_to_hdf5(sampled_video_frames, sampled_mskb_states, sampled_mskb_events, record_folder, idx)
 
 
 def state_to_str(state, former_state):
@@ -305,7 +314,9 @@ def repaly_sampled_video_and_mskb(sampled_video_frames, sampled_mskb_events):
             break
     pass
 
-def save_to_hdf5(sampled_video_frames, sampled_mskb_events, record_folder, idx):
+def save_to_hdf5(sampled_video_frames, 
+                sampled_mskb_states, sampled_mskb_events, 
+                record_folder, idx):
     # 直接和record放一个文件夹力，命名为{idx}.hdf5
     data_dict = {
         '/obs/state': [],
@@ -313,7 +324,34 @@ def save_to_hdf5(sampled_video_frames, sampled_mskb_events, record_folder, idx):
     }
     for cam_name in CAMERA_NAMES:
         data_dict[f'/obs/images/{cam_name}'] = []
-    print(data_dict.keys())
+    
+    assert len(sampled_video_frames) == len(sampled_mskb_events)
+    assert len(sampled_mskb_states) == len(sampled_mskb_events)
+    max_timestamp = len(sampled_video_frames)
+    while sampled_video_frames:
+        frames = sampled_video_frames.pop(0)
+        state = sampled_mskb_states.pop(0)
+        action = sampled_mskb_events.pop(0)
+        data_dict['/obs/state'].append(state)
+        data_dict['/action'].append(action)
+        for cam_idx, cam_name in enumerate(CAMERA_NAMES):
+            data_dict[f'/obs/images/{cam_name}'].append(frames[cam_idx])
+
+    # HDF5
+    t0 = time.time()
+    hdf5_path = os.path.join(record_folder, f'{idx}.hdf5')
+    with h5py.File(hdf5_path, 'w', rdcc_nbytes=1024 ** 2 * 2) as root:
+        obs = root.create_group('obs')
+        image = obs.create_group('images')
+        for cam_name in CAMERA_NAMES:
+            image.create_dataset(cam_name, (max_timestamp, 480, 640, 3), dtype='uint8', chunks=(1, 480, 640, 3))
+        obs.create_dataset('state', (max_timestamp, 19), dtype='float64')
+        act = root.create_dataset('action', (max_timestamp, 19), dtype='float64')
+
+        for name, array in data_dict.items():
+            print(name)
+            root[name][...] = array
+    print(f'save hdf5 cost time: {time.time() - t0}')
 
 
 def main(output_path: str, task_name: str):
