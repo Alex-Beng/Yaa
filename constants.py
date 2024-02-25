@@ -98,13 +98,22 @@ CAMERA_NAMES = [
 import os
 
 # Task config
+ROOT_PATH = os.path.dirname(__file__)
 TASK_CONFIG = {
     'test': {
         # 'dataset_dir': os.path.join(__file__, './build/test'),
         # 需要__file__的parent
-        'dataset_dir': os.path.join(os.path.dirname(__file__), './build/test'),
+        'dataset_dir': os.path.join(ROOT_PATH, './build/test'),
         'num_episodes': 2,
         'episode_len': 400, # TODO: fix in record
+        'camera_names': CAMERA_NAMES,
+    },
+    # 名椎滩好感任务
+    'nazuchi_beach_friendship': {
+        'dataset_dir': os.path.join(ROOT_PATH, './datasets/nazuchi_beach_friendship'),
+        'num_episodes': 20,
+        'episode_len': 400, # TODO: fix in record
+        # episode 现在是load_data运行时决定的
         'camera_names': CAMERA_NAMES,
     }
 }

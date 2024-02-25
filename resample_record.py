@@ -104,7 +104,7 @@ def get_sample_timestamps(record_folder, idx):
     dt_in_ns = int(DT * 1e9)
     sample_timestamps = [ts for ts in range(start_ts, end_ts, dt_in_ns)]
     
-    if True:
+    if debug:
         sample_timestamps = sample_timestamps[:300]
 
     video_sample_idx = []
@@ -395,4 +395,5 @@ def main(output_path: str, task_name: str):
 
 if __name__ == '__main__':
     # test_resize('./build/test/0.mp4')
-    main(output_path='./build', task_name='test')    # test_resize('./build/test/1_alpha.mp4')
+    # main(output_path='./build', task_name='test')    # test_resize('./build/test/1_alpha.mp4')
+    main(output_path='./datasets', task_name='nazuchi_beach_friendship')

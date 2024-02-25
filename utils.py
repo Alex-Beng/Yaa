@@ -5,6 +5,8 @@ import torch
 import os
 import h5py
 from torch.utils.data import TensorDataset, DataLoader
+import torch.nn.functional as F
+from torch.nn.utils.rnn import pad_sequence
 
 import IPython
 e = IPython.embed
@@ -60,7 +62,7 @@ class EpisodicDataset(torch.utils.data.Dataset):
             # IN Yaa, there is not "sim", only record.
             action = root['/action'][max(0, start_ts - 1):] # 先试试-1
             action_len = episode_len - max(0, start_ts - 1)
-
+        # print("2333333333333")
         # self.is_sim = is_sim
         padded_action = np.zeros(original_action_shape, dtype=np.float32)
         padded_action[:action_len] = action
@@ -89,6 +91,7 @@ class EpisodicDataset(torch.utils.data.Dataset):
         # qpos_data = (qpos_data - self.norm_stats["qpos_mean"]) / self.norm_stats["qpos_std"]
         obs_state_data = (obs_state_data - self.norm_stats['obs_state_mean']) / self.norm_stats['obs_state_std']
 
+        # print shapes
         return image_data, obs_state_data, action_data, is_pad
 
 
@@ -96,42 +99,66 @@ def get_norm_stats(dataset_dir, num_episodes):
     # all_qpos_data = []
     all_state_data = []
     all_action_data = []
+    max_episode_len = 0
     for episode_idx in range(num_episodes):
         dataset_path = os.path.join(dataset_dir, f'{episode_idx}.hdf5')
         with h5py.File(dataset_path, 'r') as root:
-            # qpos = root['/observations/qpos'][()]
             obs_state = root['/obs/state'][()]
             action = root['/action'][()]
-        # all_qpos_data.append(torch.from_numpy(qpos))
+        
         all_state_data.append(torch.from_numpy(obs_state))
         all_action_data.append(torch.from_numpy(action))
-    # all_qpos_data = torch.stack(all_qpos_data)
-    # 这里的stack是会创建新维度
-    # episode_idx, batch_size, state/action_dim
+        max_episode_len = max(max_episode_len, action.shape[0])
+    all_mask = []
+    # pad to max_episode_len, state_dim
+    for i in range(num_episodes):
+        state_data = all_state_data[i]
+        action_data = all_action_data[i]
+        # print(state_data.shape, action_data.shape)
+        pad_len = max_episode_len - state_data.shape[0]
+        # print(pad_len)
+        
+        if pad_len > 0:
+            pad = torch.zeros(pad_len, state_data.shape[1])
+            all_state_data[i] = torch.cat([state_data, pad], dim=0)
+            pad = torch.zeros(pad_len, action_data.shape[1])
+            all_action_data[i] = torch.cat([action_data, pad], dim=0)
+            # print(all_state_data[i].shape, all_action_data[i].shape)            
+
+            mask = torch.ones_like(all_action_data[i])
+            mask[pad_len:] = 0
+            # print(mask.shape)
+            # exit()
+        else:
+            mask = torch.ones_like(all_action_data[i])
+        all_mask.append(mask)
+    all_mask = torch.stack(all_mask)
     all_state_data = torch.stack(all_state_data)
     all_action_data = torch.stack(all_action_data)
-    all_action_data = all_action_data # ? what is this for?
+    # print(all_state_data.shape, all_action_data.shape, all_mask.shape)
+    # exit()
 
-    # normalize action data
-    action_mean = all_action_data.mean(dim=[0, 1], keepdim=True)
-    action_std = all_action_data.std(dim=[0, 1], keepdim=True)
-    action_std = torch.clip(action_std, 1e-2, np.inf) # clipping
+    # episode_idx, batch_size, state/action_dim 计算均值和标准差
+    # 使用掩码来计算
+    action_mean = torch.sum(all_action_data * all_mask, dim=(0, 1)) / torch.sum(all_mask, dim=(0, 1))
+    state_mean = torch.sum(all_state_data * all_mask[:, :, :all_state_data.shape[-1]], dim=(0, 1)) / torch.sum(all_mask, dim=(0, 1))
 
-    # normalize qpos data
-    # qpos_mean = all_qpos_data.mean(dim=[0, 1], keepdim=True)
-    # qpos_std = all_qpos_data.std(dim=[0, 1], keepdim=True)
-    # qpos_std = torch.clip(qpos_std, 1e-2, np.inf) # clipping
-    state_mean = all_state_data.mean(dim=[0, 1], keepdim=True)
-    state_std = all_state_data.std(dim=[0, 1], keepdim=True)
-    state_std = torch.clip(state_std, 1e-2, np.inf) # clipping
+    action_std = torch.sqrt(torch.sum(all_mask * (all_action_data - action_mean) ** 2, dim=(0, 1)) / torch.sum(all_mask, dim=(0, 1)))
+    state_std = torch.sqrt(torch.sum(all_mask * (all_state_data - state_mean) ** 2, dim=(0, 1)) / torch.sum(all_mask, dim=(0, 1)))
+
+    # clip
+    action_std = torch.clip(action_std, 1e-2, np.inf) 
+    state_std = torch.clip(state_std, 1e-2, np.inf)
+    # print(action_mean.storage())
 
     stats = {"action_mean": action_mean.numpy().squeeze(), "action_std": action_std.numpy().squeeze(),
             #  "qpos_mean": qpos_mean.numpy().squeeze(), "qpos_std": qpos_std.numpy().squeeze(),
                 "obs_state_mean": state_mean.numpy().squeeze(), "obs_state_std": state_std.numpy().squeeze(),
             #  "example_qpos": qpos}
             "example_state": obs_state}
-
-    return stats
+    # print("here")
+    
+    return stats, max_episode_len
 
 
 def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_size_val):
@@ -144,16 +171,41 @@ def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_s
     train_indices = shuffled_indices[:int(train_ratio * num_episodes)]
     val_indices = shuffled_indices[int(train_ratio * num_episodes):]
 
-    # obtain normalization stats for qpos and action
-    norm_stats = get_norm_stats(dataset_dir, num_episodes)
+    # obtain normalization stats & max_episode for qpos and action
+    # use max_episode to pad in dataloader
+    norm_stats, max_episode_len = get_norm_stats(dataset_dir, num_episodes)
 
     # construct dataset and dataloader
     train_dataset = EpisodicDataset(train_indices, dataset_dir, camera_names, norm_stats)
     val_dataset = EpisodicDataset(val_indices, dataset_dir, camera_names, norm_stats)
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size_train, shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size_val, shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1)
+    # print(f'batch size train: {batch_size_train}, batch size val: {batch_size_val}')
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size_train, 
+                                  shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,
+                                  collate_fn=MyCollate(max_episode_len).collate_fn)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size_val,
+                                shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,
+                                collate_fn=MyCollate(max_episode_len).collate_fn)
 
     return train_dataloader, val_dataloader, norm_stats
+
+
+class MyCollate:
+    def __init__(self, max_episode_len):
+        self.max_len = max_episode_len
+
+    def collate_fn(self, batch):
+        # batch is [(image, state, action, is_pad), ...]
+        # image: [num_cams, C, H, W]
+        # state: [state_dim]
+        # action: [episode_len, action_dim]
+        # is_pad: [episode_len]
+        image, state, action, is_pad = zip(*batch)
+
+        # pad action and is_pad
+        action = pad_sequence(action, batch_first=True, padding_value=0)
+        is_pad = pad_sequence(is_pad, batch_first=True, padding_value=1)
+
+        return torch.stack(image), torch.stack(state), action, is_pad
 
 
 ### env utils
