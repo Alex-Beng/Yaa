@@ -83,6 +83,13 @@ mouse event: state = 0/1/2/4/8/16/32/1024
 是否需要考虑归一化rolling dx dy？
 管他呢，先把丹练起来再说。
 
+## 推理相关
+
+0. 需要测试推理频率
+1. 需要把实际环境封装成env
+2. 在windows上使用gpu推理/量化，if needed
+
+
 ## SOME RESULTS in intercption test
 
 重放用时而言，重放完毕用时大概是录制用时的两倍。
