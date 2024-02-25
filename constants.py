@@ -114,6 +114,7 @@ TASK_CONFIG = {
         'num_episodes': 20,
         'episode_len': 400, # TODO: fix in record
         # episode 现在是load_data运行时决定的
+        # 推理时如何确定？
         'camera_names': CAMERA_NAMES,
     }
 }
