@@ -79,6 +79,8 @@ def main(args):
     stats_path = os.path.join(ckpt_dir, f'dataset_stats.pkl')
     with open(stats_path, 'wb') as f:
         # 保存这一数据集的mean and std for 推理
+        # TODO: 直接和checkpoint存一起
+        # TODO: 删掉stats里面的sample数据
         pickle.dump(stats, f)
     
     best_ckpt_info = train_bc(train_dataloader, val_dataloader, config)
