@@ -30,7 +30,7 @@ def main(args):
     task_config = TASK_CONFIG[task_name]
     dataset_dir = task_config['dataset_dir']
     num_episodes = task_config['num_episodes']
-    episode_len = task_config['episode_len']
+    episode_len = task_config['episode_len'] # TODO: rm this config
     camera_names = task_config['camera_names']
 
     # fixed parameters
@@ -67,6 +67,7 @@ def main(args):
         'temporal_agg': args['temporal_agg'],
         'camera_names': camera_names,
         'real_GI': real_GI,
+        'save_video': save_video,
     }
 
     # test !
