@@ -93,7 +93,7 @@ class EpisodicDataset(torch.utils.data.Dataset):
 
         # normalize image and change dtype to float
         # 图像后面还会在policy中基于ImageNet数据集的均值和方差进行归一化
-        # TODO: mv ImageNet normalization to here
+        # TODO: mv ImageNet normalization to here?
         image_data = image_data / 255.0
         action_data = (action_data - self.norm_stats["action_mean"]) / self.norm_stats["action_std"]
         # qpos_data = (qpos_data - self.norm_stats["qpos_mean"]) / self.norm_stats["qpos_std"]
