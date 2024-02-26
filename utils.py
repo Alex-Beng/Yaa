@@ -109,7 +109,43 @@ class EpisodicDatasetTest(torch.utils.data.Dataset):
         self.camera_names = camera_names
         self.norm_stats = norm_stats
         self.samp_traj = samp_traj
+        
+        f = h5py.File(os.path.join(self.dataset_dir, f'{self.episode_id}.hdf5'), 'r')
+        self.episode_len = f['/action'].shape[0]
+        self.hdf5_handle = f
+        
+        if self.samp_traj:
+            self.start_ts = np.random.choice(self.episode_len)
+            self.episode_len = self.episode_len - self.start_ts
+        else:
+            self.start_ts = 0
+        
+        postprocess = lambda action: (action * self.norm_stats['action_std']) + self.norm_stats['action_mean']
+        self.postprocess = postprocess
+    def __len__(self):
+        return self.episode_len
+    
+    def __getitem__(self, index):
+        ts = self.start_ts + index
+        
+        # image, action
+        image_dict = dict()
+        for cam_name in self.camera_names:
+            image_dict[cam_name] = self.hdf5_handle[f'/obs/images/{cam_name}'][ts]
+        all_cam_images = []
+        for cam_name in self.camera_names:
+            all_cam_images.append(image_dict[cam_name])
+        all_cam_images = np.stack(all_cam_images, axis=0)
+        image_data = torch.from_numpy(all_cam_images)
+        image_data = torch.einsum('k h w c -> k c h w', image_data)
+        image_data = image_data / 255.0
+        image_data = (image_data - self.norm_stats['obs_state_mean']) / self.norm_stats['obs_state_std']
 
+        action = self.hdf5_handle['/action'][ts]
+        # 在这里就反归一化
+        action = self.postprocess(action)
+
+        return image_data, action
 
 def get_norm_stats(dataset_dir, num_episodes):
     # all_qpos_data = []
