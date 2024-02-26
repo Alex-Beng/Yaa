@@ -394,6 +394,7 @@ def main(output_path: str, task_name: str):
 
 
 if __name__ == '__main__':
+    # TODO: make params read from cli
     # test_resize('./build/test/0.mp4')
     # main(output_path='./build', task_name='test')    # test_resize('./build/test/1_alpha.mp4')
     main(output_path='./datasets', task_name='nazuchi_beach_friendship')
