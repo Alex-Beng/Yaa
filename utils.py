@@ -1,8 +1,10 @@
 # copy from act repo shamelessly.
 
+import os
+import pickle
+
 import numpy as np
 import torch
-import os
 import h5py
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
@@ -240,19 +242,22 @@ def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_s
 
     return train_dataloader, val_dataloader, norm_stats
 
-def load_data_test(dataset_dir, num_episodes, camera_names, batch_size):
+def load_data_test(dataset_dir, episode_id, camera_names):
     # 不进行训练集和验证集的划分
-    # 用于测试
-    indices = np.arange(num_episodes)
+    # norm_stats, max_episode_len = get_norm_stats(dataset_dir, num_episodes)
+    # norm_stats 从pkl文件中读取，训练时必然保存的
 
-    norm_stats, max_episode_len = get_norm_stats(dataset_dir, num_episodes)
+    norm_stats = None
+    with open(os.path.join(dataset_dir, 'dataset_stats.pkl'), 'rb') as f:
+        norm_stats = pickle.load(f)
+    if norm_stats is None:
+        raise ValueError('Cannot load dataset stats from dataset_stats.pkl')
 
-    # 取full episode
-    dataset = EpisodicDataset(indices, dataset_dir, camera_names, norm_stats, samp_traj=False)
-    dataloader = DataLoader(dataset, batch_size=batch_size,
-                            shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,
-                            collate_fn=MyCollate(max_episode_len).collate_fn)
-    return dataloader, norm_stats
+    test_dataset = EpisodicDatasetTest(episode_id, dataset_dir, camera_names, norm_stats)
+    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=1, prefetch_factor=1)
+
+    return test_dataloader, norm_stats
+
     
 
 class MyCollate:
