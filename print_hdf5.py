@@ -20,6 +20,6 @@ def print_dataset_sizes(hdf_file):
             if isinstance(dataset, h5py.Dataset):
                 print(f'Dataset {name} contains {dataset.size} elements')
 
-hdf5_paht = './build/test/1.hdf5'
+hdf5_paht = './datasets/nazuchi_beach_friendship/0.hdf5'
 print_structure(hdf5_paht)
 print_dataset_sizes(hdf5_paht)
