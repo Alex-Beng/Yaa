@@ -256,9 +256,8 @@ def load_data_test(dataset_dir, ckpt_dir, episode_id, camera_names):
         raise ValueError('Cannot load dataset stats from dataset_stats.pkl')
 
     test_dataset = EpisodicDatasetTest(episode_id, dataset_dir, camera_names, norm_stats)
-    test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False, pin_memory=True, num_workers=1, prefetch_factor=1)
 
-    return test_dataloader, norm_stats
+    return test_dataset, norm_stats
 
     
 
