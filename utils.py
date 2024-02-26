@@ -188,6 +188,19 @@ def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_s
 
     return train_dataloader, val_dataloader, norm_stats
 
+def load_data_test(dataset_dir, num_episodes, camera_names, batch_size):
+    # 不进行训练集和验证集的划分
+    # 用于测试
+    indices = np.arange(num_episodes)
+
+    norm_stats, max_episode_len = get_norm_stats(dataset_dir, num_episodes)
+
+    dataset = EpisodicDataset(indices, dataset_dir, camera_names, norm_stats)
+    dataloader = DataLoader(dataset, batch_size=batch_size,
+                            shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,
+                            collate_fn=MyCollate(max_episode_len).collate_fn)
+    return dataloader, norm_stats
+    
 
 class MyCollate:
     def __init__(self, max_episode_len):
