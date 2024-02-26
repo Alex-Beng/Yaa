@@ -17,7 +17,6 @@ def main(args):
     # TODO: make seed configurable
     set_seed(1)
     # command line parameters
-    # is_eval = args['eval']
     ckpt_dir = args['ckpt_dir']
     # policy_class = args['policy_class']
     # onscreen_render = args['onscreen_render']
