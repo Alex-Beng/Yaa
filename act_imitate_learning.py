@@ -195,7 +195,6 @@ def plot_history(train_history, validation_history, num_epochs, ckpt_dir, seed):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # 打算单独写个在O上验证的脚本，到时再说
     # parser.add_argument('--eval', action='store_true')
     # parser.add_argument('--onscreen_render', action='store_true')
     parser.add_argument('--ckpt_dir', action='store', type=str, help='ckpt_dir', required=True)
