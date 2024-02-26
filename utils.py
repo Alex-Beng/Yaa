@@ -124,7 +124,9 @@ class EpisodicDatasetTest(torch.utils.data.Dataset):
         else:
             self.start_ts = 0
         
+        preprocess = lambda action: (action - self.norm_stats['action_mean']) / self.norm_stats['action_std']
         postprocess = lambda action: (action * self.norm_stats['action_std']) + self.norm_stats['action_mean']
+        self.preprocess = preprocess
         self.postprocess = postprocess
     def __len__(self):
         return self.episode_len
@@ -143,11 +145,9 @@ class EpisodicDatasetTest(torch.utils.data.Dataset):
         image_data = torch.from_numpy(all_cam_images)
         image_data = torch.einsum('k h w c -> k c h w', image_data)
         image_data = image_data / 255.0
-        image_data = (image_data - self.norm_stats['obs_state_mean']) / self.norm_stats['obs_state_std']
-
+        
         action = self.hdf5_handle['/action'][ts]
-        # 在这里就反归一化
-        action = self.postprocess(action)
+        action = self.preprocess(action)
 
         return image_data, action
 
@@ -244,13 +244,13 @@ def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_s
 
     return train_dataloader, val_dataloader, norm_stats
 
-def load_data_test(dataset_dir, episode_id, camera_names):
+def load_data_test(dataset_dir, ckpt_dir, episode_id, camera_names):
     # 不进行训练集和验证集的划分
     # norm_stats, max_episode_len = get_norm_stats(dataset_dir, num_episodes)
     # norm_stats 从pkl文件中读取，训练时必然保存的
 
     norm_stats = None
-    with open(os.path.join(dataset_dir, 'dataset_stats.pkl'), 'rb') as f:
+    with open(os.path.join(ckpt_dir, 'dataset_stats.pkl'), 'rb') as f:
         norm_stats = pickle.load(f)
     if norm_stats is None:
         raise ValueError('Cannot load dataset stats from dataset_stats.pkl')
