@@ -10,6 +10,7 @@ if __name__ == "__main__":
     pkl_path = './models/dataset_stats.pkl'
     with open(pkl_path, 'rb') as f:
         stats = pickle.load(f)
+        print(stats.keys())
         # e()
         for k in stats:
             print(k)
