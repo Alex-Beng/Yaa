@@ -13,11 +13,13 @@ e = IPython.embed
 # 这个交互式后面也没用到啊？？
 
 class EpisodicDataset(torch.utils.data.Dataset):
-    def __init__(self, episode_ids, dataset_dir, camera_names, norm_stats):
+    def __init__(self, episode_ids, dataset_dir, camera_names, norm_stats, samp_traj=True):
         super(EpisodicDataset).__init__()
         self.episode_ids = episode_ids
         self.dataset_dir = dataset_dir
         self.camera_names = camera_names
+        # 是否随机裁剪轨迹长度
+        self.samp_traj = samp_traj
         # 这里的norm是在整个task的数据集上计算的
         # 需要保留归一norm以在推理时使用？
         # 嗷，保存了，在ckpt_dir/dataset_stats.pkl
@@ -31,7 +33,7 @@ class EpisodicDataset(torch.utils.data.Dataset):
         return len(self.episode_ids)
 
     def __getitem__(self, index):
-        sample_full_episode = False # hardcode
+        sample_full_episode = not self.samp_traj
 
         episode_id = self.episode_ids[index]
         dataset_path = os.path.join(self.dataset_dir, f'{episode_id}.hdf5')
@@ -195,7 +197,8 @@ def load_data_test(dataset_dir, num_episodes, camera_names, batch_size):
 
     norm_stats, max_episode_len = get_norm_stats(dataset_dir, num_episodes)
 
-    dataset = EpisodicDataset(indices, dataset_dir, camera_names, norm_stats)
+    # 取full episode
+    dataset = EpisodicDataset(indices, dataset_dir, camera_names, norm_stats, samp_traj=False)
     dataloader = DataLoader(dataset, batch_size=batch_size,
                             shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,
                             collate_fn=MyCollate(max_episode_len).collate_fn)
