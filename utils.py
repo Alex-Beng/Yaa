@@ -21,7 +21,6 @@ class EpisodicDataset(torch.utils.data.Dataset):
         # 是否随机裁剪轨迹长度
         # 对于test没用，因为这里是一个image -> actions的映射
         # test需要的仅仅是 images -> actions
-        # 直接读整个hdf5得了。
         self.samp_traj = samp_traj
         # 这里的norm是在整个task的数据集上计算的
         # 需要保留归一norm以在推理时使用？
@@ -97,6 +96,19 @@ class EpisodicDataset(torch.utils.data.Dataset):
         obs_state_data = (obs_state_data - self.norm_stats['obs_state_mean']) / self.norm_stats['obs_state_std']
 
         return image_data, obs_state_data, action_data, is_pad
+
+# 用于test的数据集
+# one traj in.
+# return image, action in each ts
+class EpisodicDatasetTest(torch.utils.data.Dataset):
+    def __init__(self, episode_id, dataset_dir, camera_names, norm_stats, samp_traj=False):
+        super(EpisodicDatasetTest).__init__()
+        # only id !
+        self.episode_id = episode_id
+        self.dataset_dir = dataset_dir
+        self.camera_names = camera_names
+        self.norm_stats = norm_stats
+        self.samp_traj = samp_traj
 
 
 def get_norm_stats(dataset_dir, num_episodes):
