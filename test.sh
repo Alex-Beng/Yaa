@@ -3,7 +3,5 @@ python act_infer.py \
 --ckpt_dir ./models --ckpt_name policy_best.ckpt \
 --task_name nazuchi_beach_friendship \
 --seed 1000 \
---real_O false \
---save_video true \
 --chunk_size 100 --hidden_dim 512 --dim_feedforward 3200 \
 --temporal_agg 
