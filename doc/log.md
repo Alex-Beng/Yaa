@@ -109,6 +109,11 @@ SOLUTION：将Windows的鼠标设置中的“提高指针精确度”关闭，�
 ![video_diff_timing](../pics/video_diff_timing.png)
 ![ms_kb_diff_timing](../pics/ms_kb_diff_timing.png)
 
+## RESULTS in act training
+
+![act_train](../pics/train_loss.png)
+
+
 ## 环境依赖
 
 cpp的
