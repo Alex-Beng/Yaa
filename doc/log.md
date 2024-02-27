@@ -106,8 +106,8 @@ SOLUTION：将Windows的鼠标设置中的“提高指针精确度”关闭，�
 直接降频推理得了，反正VPT也是20Hz。
 键鼠采集结果频率在80Hz左右，可以接受。
 
-![video_diff_timing](./pics/video_diff_timing.png)
-![ms_kb_diff_timing](./pics/ms_kb_diff_timing.png)
+![video_diff_timing](../pics/video_diff_timing.png)
+![ms_kb_diff_timing](../pics/ms_kb_diff_timing.png)
 
 ## 环境依赖
 
