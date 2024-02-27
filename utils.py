@@ -202,7 +202,7 @@ def get_norm_stats(dataset_dir, num_episodes):
     action_std = torch.sqrt(torch.sum(all_mask * (all_action_data - action_mean) ** 2, dim=(0, 1)) / torch.sum(all_mask, dim=(0, 1)))
     state_std = torch.sqrt(torch.sum(all_mask * (all_state_data - state_mean) ** 2, dim=(0, 1)) / torch.sum(all_mask, dim=(0, 1)))
 
-    # clip
+    # clip to [1e-2, inf]
     action_std = torch.clip(action_std, 1e-2, np.inf) 
     state_std = torch.clip(state_std, 1e-2, np.inf)
     # print(action_mean.storage())
