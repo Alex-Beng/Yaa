@@ -73,8 +73,20 @@ class GIDataEnv:
             return False
         else:
             return True
-        
 
+class GIRealEnv:
+    # TODO: implement GIRealEnv
+    def __init__(self, config) -> None:
+        raise NotImplementedError
+        # image, action,
+        # torch.Size([1, 2, 3, 480, 640]) torch.Size([1, 19])
+
+    def reset(self):
+        pass        
+    def render(self):
+        pass
+    def step(self, action):
+        pass
 
 if __name__ == '__main__':
     config = {
