@@ -73,6 +73,10 @@ class GIDataEnv:
             return False
         else:
             return True
+    
+    def observation(self):
+        data = self.dataset[self.step_id]
+        return data
 
 class GIRealEnv:
     # TODO: implement GIRealEnv
