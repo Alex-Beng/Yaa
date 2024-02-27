@@ -19,3 +19,4 @@ __pycache__
 *.log
 models/
 datasets/
+detr/detr.egg-info/
