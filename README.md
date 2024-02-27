@@ -8,7 +8,7 @@ Yet Another Artificial GI-player
 
 # 介绍
 
-基于目前大热的Diffusion Policy、ACT等强化学习/模仿学习算法，实现原神的基于动作生成的AI。
+基于~~目前大热的Diffusion Policy~~、ACT等强化学习/模仿学习算法，实现原神的基于动作生成的AI。
 
 # TODOs
 
