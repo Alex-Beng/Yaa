@@ -3,6 +3,7 @@
 
 # 使用act网络进行模仿学习
 import os
+import time
 import pickle
 import argparse
 from copy import deepcopy
@@ -12,11 +13,15 @@ import torch
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from einops import rearrange
 
 from utils import set_seed, load_data_test, compute_dict_mean, detach_dict
 from constants import TASK_CONFIG, STATE_DIM
 from policy import ACTPolicy
 from gi_env import GIDataEnv, GIRealEnv
+
+import IPython
+e = IPython.embed
 
 def main(args):
     # TODO: make seed configurable
@@ -61,7 +66,7 @@ def main(args):
         'num_episodes': num_episodes,
         'episode_len': episode_len,
         'state_dim': state_dim,
-        'lr': args['lr'],
+        # 'lr': args['lr'],
         # 'policy_class': policy_class,
         'onscreen_render': onscreen_render,
         'policy_config': policy_config,    # TODO: code the envs for testing
@@ -85,6 +90,7 @@ def test_on_data(config):
     set_seed(config['seed'])
     ckpt_dir = config['ckpt_dir']
     ckpt_name = config['ckpt_name']
+    state_dim = config['state_dim']
     onscreen_render = config['onscreen_render']
     policy_config = config['policy_config']
     camera_names = config['camera_names']
@@ -108,12 +114,14 @@ def test_on_data(config):
     with open(stats_path, 'rb') as f:
         stats = pickle.load(f)
     
-    pre_process = lambda state: (state - stats['state_mean']) / stats['state_std']
+    pre_process = lambda state: (state - stats['obs_state_mean']) / stats['obs_state_std']
     post_process = lambda action: action * stats['action_std'] + stats['action_mean']
     
     # load env
     env = GIDataEnv(config)
 
+    # TODO: make query freq 独立于 chunk size，使得在使用时间集成时可以延迟几个ts
+    # TODO: 研究独立后的query freq对于成功率的影响
     query_frequecy = policy_config['num_queries']
     if temporal_agg:
         query_frequecy = 1
@@ -130,6 +138,77 @@ def test_on_data(config):
         if onscreen_render:
             cv2.namedWindow('image', cv2.WINDOW_NORMAL)
         
+        if temporal_agg:
+            # max_ts, max_ts+chunk size, state_dim
+            # 记录推理的actions ?
+            all_time_actions = torch.zeros([max_timestamps, max_timestamps+num_queries, state_dim]).cuda()
+        # IN Yaa, the state is the mskb
+        # 同时引入假设，初始为 [0] * state_dim
+        # 所以需要在推理的时候，维护一个 state 
+        state_history = torch.zeros([1, max_timestamps, state_dim]).cuda()
+        curr_state = np.zeros([state_dim]) # easier for cpu operations
+        image_list = [] # for video?
+        state_list = []
+        target_state_list = []
+        
+        with torch.inference_mode():
+            for t in range(max_timestamps):
+                obs = env.observation()
+                # state 需要 preprocess
+                state_numpy = deepcopy(curr_state)
+                state = pre_process(state_numpy)
+                # make it to [1, state_dim]
+                state = torch.from_numpy(state).float().cuda().unsqueeze(0)
+                state_history[0, t] = state
+                
+                # get image from obs
+                image_dict, ground_action = obs
+                # print(image_dict.keys())
+                curr_image = image_preprocess(image_dict, camera_names)
+                # torch.Size([1, 2, 3, 480, 640])
+                # print(curr_image.shape) 
+
+                # feed image & state to policy
+                if t % query_frequecy == 0:
+                    # predict 一个 action chunk
+                    # 1, chunk size, state_dim
+                    t0 = time.time()
+                    all_actions = policy(state, curr_image)
+                    print(f'policy cost time: {time.time() - t0}')
+                
+                # 进行时间集成！
+                if temporal_agg:
+                    all_time_actions[[t], t:t+num_queries] = all_actions
+                    actions_for_curr_step = all_time_actions[:, t]
+                    actions_populated = torch.all(actions_for_curr_step != 0, axis=1)
+                    actions_for_curr_step = actions_for_curr_step[actions_populated]
+                    # TODO: make it configurable
+                    k = 0.01
+                    exp_weights = np.exp(-k * np.arange(len(actions_for_curr_step)))
+                    exp_weights = exp_weights / exp_weights.sum()
+                    exp_weights = torch.from_numpy(exp_weights).cuda().unsqueeze(dim=1)
+                    raw_action = (actions_for_curr_step * exp_weights).sum(dim=0, keepdim=True)
+                else:
+                    # 就是每隔 chunk size推理一次
+                    raw_action = all_actions[:, t % query_frequecy]
+                # print(raw_action.shape)
+                # 需要后处理 action
+                raw_action = raw_action.squeeze(0).cpu().numpy()
+                action = post_process(raw_action)
+                target_state = action
+                print(np.max(action), np.min(action))
+                
+                env.step(action)
+
+                # for visualization
+                state_list.append(state_numpy)
+                target_state_list.append(target_state)
+                
+                # update curr frame
+                # TODO: plot action to images
+                if onscreen_render:
+                    pass
+                    # image_dict = env.render()
     
 
     env = GIDataEnv(config)
@@ -139,7 +218,19 @@ def test_on_data(config):
 def test_on_real(config):
     # 
     pass
-    
+
+def image_preprocess(image_dict, camera_names):
+    # 图像进入推理前的预处理
+    # srds，在policy中还有一个normalize to ImageNet分布的操作
+    curr_images = []
+    for cam_name in camera_names:
+        curr_image = rearrange(image_dict[cam_name], 'h w c -> c h w')
+        curr_images.append(curr_image)
+    curr_image = np.stack(curr_images, axis=0)
+    curr_image = torch.from_numpy(curr_image / 255.0).float().cuda().unsqueeze(0)
+    return curr_image
+
+
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -150,8 +241,8 @@ if __name__ == '__main__':
     parser.add_argument('--ckpt_name', action='store', type=str, help='ckpt_name', required=True)
     parser.add_argument('--task_name', action='store', type=str, help='task_name', required=True)
     parser.add_argument('--seed', action='store', type=int, help='seed', required=True)
-    parser.add_argument('--real_O', action='store', help='infer in GI', required=True)
-    parser.add_argument('--save_video', action='store', help='save_video', required=True)
+    parser.add_argument('--real_O', action='store_true', help='infer in GI', required=False, default=False)
+    parser.add_argument('--save_video', action='store_true', help='save_video', required=False, default=True)
     # for ACT
     parser.add_argument('--chunk_size', action='store', type=int, help='chunk_size', required=False)
     parser.add_argument('--hidden_dim', action='store', type=int, help='hidden_dim', required=False)
