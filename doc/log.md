@@ -89,7 +89,7 @@ mouse event: state = 0/1/2/4/8/16/32/1024
 1. 需要把实际环境封装成env
 2. 在windows上使用gpu推理/量化，if needed
 
-GPU推理，1650上1.6g显存，95%使用率。推理频率在25Hz左右。
+GPU推理，1650上940MB显存，95%使用率。推理频率在25Hz左右。
 
 <details>
 <summary>点击展开/折叠</summary>
