@@ -13,7 +13,9 @@ class ACTPolicy(nn.Module):
         model, optimizer = build_ACT_model_and_optimizer(args_override)
         self.model = model # CVAE decoder
         self.optimizer = optimizer
-        self.kl_weight = args_override['kl_weight']
+        
+        # TODO: rm this hack
+        self.kl_weight = args_override['kl_weight'] if 'kl_weight' in args_override else 10
         print(f'KL Weight {self.kl_weight}')
 
     def __call__(self, qpos, image, actions=None, is_pad=None):
