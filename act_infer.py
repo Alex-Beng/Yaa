@@ -7,6 +7,7 @@ import pickle
 import argparse
 from copy import deepcopy
 
+import cv2
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -15,6 +16,7 @@ import matplotlib.pyplot as plt
 from utils import set_seed, load_data_test, compute_dict_mean, detach_dict
 from constants import TASK_CONFIG, STATE_DIM
 from policy import ACTPolicy
+from gi_env import GIDataEnv, GIRealEnv
 
 def main(args):
     # TODO: make seed configurable
@@ -56,12 +58,14 @@ def main(args):
     config = {
         'ckpt_dir': ckpt_dir,
         'ckpt_name': args['ckpt_name'],
+        'num_episodes': num_episodes,
         'episode_len': episode_len,
         'state_dim': state_dim,
         'lr': args['lr'],
         # 'policy_class': policy_class,
         'onscreen_render': onscreen_render,
-        'policy_config': policy_config,
+        'policy_config': policy_config,    # TODO: code the envs for testing
+
         'task_name': task_name,
         'seed': args['seed'],
         'temporal_agg': args['temporal_agg'],
@@ -78,7 +82,58 @@ def main(args):
 
 
 def test_on_data(config):
-    # TODO: code the envs for testing
+    set_seed(config['seed'])
+    ckpt_dir = config['ckpt_dir']
+    ckpt_name = config['ckpt_name']
+    onscreen_render = config['onscreen_render']
+    policy_config = config['policy_config']
+    camera_names = config['camera_names']
+    task_name = config['task_name']
+    max_timestamps = config['episode_len']
+    max_episodes = config['num_episodes']
+    temporal_agg = config['temporal_agg']
+    save_video = config['save_video']
+
+    # load policy and stats
+    ckpt_path = os.path.join(ckpt_dir, ckpt_name)
+    policy = ACTPolicy(policy_config)
+    loading_status =policy.load_state_dict(torch.load(ckpt_path))
+    print(f'loading status: {loading_status}')
+    policy.cuda()
+    policy.eval()
+    print(f'policy loaded from {ckpt_path}')
+
+    # load dataset stats
+    stats_path = os.path.join(ckpt_dir, f'dataset_stats.pkl')
+    with open(stats_path, 'rb') as f:
+        stats = pickle.load(f)
+    
+    pre_process = lambda state: (state - stats['state_mean']) / stats['state_std']
+    post_process = lambda action: action * stats['action_std'] + stats['action_mean']
+    
+    # load env
+    env = GIDataEnv(config)
+
+    query_frequecy = policy_config['num_queries']
+    if temporal_agg:
+        query_frequecy = 1
+        num_queries = policy_config['num_queries'] # TODO: explain this
+    
+    # TODO: make this scale configurable
+    max_timestamps = int(max_timestamps * 1)
+
+    for episode_id in range(max_episodes):
+        print(f'episode {episode_id}')
+        # reset env
+        env.reset()
+
+        if onscreen_render:
+            cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+        
+    
+
+    env = GIDataEnv(config)
+
     pass
 
 def test_on_real(config):
