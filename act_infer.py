@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from einops import rearrange
 
 from utils import set_seed, load_data_test, compute_dict_mean, detach_dict
-from constants import TASK_CONFIG, STATE_DIM
+from constants import TASK_CONFIG, STATE_DIM, SN_idx2key
 from policy import ACTPolicy
 from gi_env import GIDataEnv, GIRealEnv
 
@@ -116,6 +116,7 @@ def test_on_data(config):
     
     pre_process = lambda state: (state - stats['obs_state_mean']) / stats['obs_state_std']
     post_process = lambda action: action * stats['action_std'] + stats['action_mean']
+    print(f'stats: {stats}')
     
     # load env
     env = GIDataEnv(config)
@@ -146,14 +147,18 @@ def test_on_data(config):
         # 同时引入假设，初始为 [0] * state_dim
         # 所以需要在推理的时候，维护一个 state 
         state_history = torch.zeros([1, max_timestamps, state_dim]).cuda()
+
+        # mksb state
+        # 最后三个为鼠标滚轮, dx, dy。无需考虑状态
         curr_state = np.zeros([state_dim]) # easier for cpu operations
         image_list = [] # for video?
         state_list = []
         target_state_list = []
-        
+
         with torch.inference_mode():
             for t in range(max_timestamps):
                 obs = env.observation()
+                # print(curr_state)
                 # state 需要 preprocess
                 state_numpy = deepcopy(curr_state)
                 state = pre_process(state_numpy)
@@ -172,9 +177,10 @@ def test_on_data(config):
                 if t % query_frequecy == 0:
                     # predict 一个 action chunk
                     # 1, chunk size, state_dim
-                    t0 = time.time()
+                    # t0 = time.time()
+                    print(np.round(state_numpy, 2))
                     all_actions = policy(state, curr_image)
-                    print(f'policy cost time: {time.time() - t0}')
+                    # print(f'policy cost time: {time.time() - t0}')
                 
                 # 进行时间集成！
                 if temporal_agg:
@@ -194,21 +200,59 @@ def test_on_data(config):
                 # print(raw_action.shape)
                 # 需要后处理 action
                 raw_action = raw_action.squeeze(0).cpu().numpy()
+                # 恢复到采集时候的分布
                 action = post_process(raw_action)
+                # print action in 两位小数
+                print(np.round(action, 2))
+
+                # 需要把action到离散状态
+                # TODO: make threshold configurable
+                # 把 action 中 < min_thre 的部分置为 0, > max_thre 的部分置为 1
+                min_thre = 0.1
+                max_thre = 0.9
+                action_bin = np.zeros_like(action, dtype=np.int8)
+                action_bin[action < min_thre] = 0
+                action_bin[action > max_thre] = 1
+
                 target_state = action
-                print(np.max(action), np.min(action))
+                # print(np.max(action), np.min(action))
                 
-                env.step(action)
+                # action影响curr_state
+                # 获得发生变动的键盘状态，进而获得实际 人的动作
+                human_actions = []
+                print(curr_state)
+                print(action_bin)
+                print(np.round(ground_action, 1))
+                # TODO: fix recording !!!!!! 应该是Mro和ML的idx发生了神秘的交换
+                # TODO: 解释 dx dy 的量级为什么这么小
+                for state_id in range(state_dim-3):
+                    if action_bin[state_id] == curr_state[state_id]:
+                        continue
+                    else:
+                        human_action = f"{SN_idx2key[state_id]} {'up' if action_bin[state_id] == 0 else 'down'}"
+                        if human_action[0] == ' ':
+                            human_action = 'space' + human_action[1:]
+                        print(f'append in {state_id}')
+                        human_actions.append(human_action)
+                    curr_state[state_id] = action_bin[state_id]
+                
+                print(human_actions)
+                
+                # do nothing in data env actually
+                if not env.step(action):
+                    break
 
                 # for visualization
                 state_list.append(state_numpy)
                 target_state_list.append(target_state)
                 
                 # update curr frame
-                # TODO: plot action to images
                 if onscreen_render:
-                    pass
-                    # image_dict = env.render()
+                    image_dict = env.render()
+                    # 先把图像拼接起来
+                    curr_image = np.concatenate([image_dict[cam_name] for cam_name in camera_names], axis=1)
+                    cv2.imshow('image', curr_image)
+                    cv2.waitKey(0)
     
 
     env = GIDataEnv(config)
