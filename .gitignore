@@ -17,6 +17,6 @@ build
 __pycache__
 *.pyc
 *.log
-models/
+./models/
 datasets/
 detr/detr.egg-info/
