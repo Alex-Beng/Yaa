@@ -75,8 +75,9 @@ class GIDataEnv:
             return True
     
     def observation(self):
-        data = self.dataset[self.step_id]
-        return data
+        action = self.dataset[self.step_id][1]
+        image_dict = self.render()
+        return image_dict, action
 
 class GIRealEnv:
     # TODO: implement GIRealEnv
