@@ -2,10 +2,15 @@
 # 先简单的cv imshow + print state&action
 
 import os
+import random
 import numpy as np
+import argparse
+
 import cv2
 import h5py
-import argparse
+import matplotlib.pyplot as plt
+
+
 
 from constants import DT, STATE_DIM, SN_idx2key
 
@@ -27,6 +32,8 @@ def main(args):
         episode_idx = 0
     hdf5_path = os.path.join(dataset_dir, f'{episode_idx}.hdf5')
     states, actions, image_dict = load_hdf5(hdf5_path)
+
+    plot_dstb(actions)
 
     save_videos(image_dict, states, actions, DT, os.path.join(dataset_dir, f'{episode_idx}_hdf5.mp4'))
 
@@ -81,12 +88,66 @@ def save_videos(image_dict, states, actions, dt, video_path):
         print(f'frame {i}/{n_frames}')
 
         wt = 0 if len(kb_events) else 1
+        wt = 1
         if cv2.waitKey(wt) & 0xFF == ord('q'):
             break
 
         out.write(frame)
 
     out.release()
+
+
+def plot_dstb(actions):
+    # record_len, state_dim
+    # print(actions.shape)
+    record_len, _ = actions.shape
+
+    # 统计各dim是否全部为0
+    is_all_zero = [0] * STATE_DIM
+    for i in range(STATE_DIM):
+        if np.min(actions[:, i]) == np.max(actions[:, i]):
+            print(i, SN_idx2key[i])
+            is_all_zero[i] = 1
+    
+    # plot time to dim
+    for i in range(STATE_DIM):
+        if is_all_zero[i]:
+            continue
+        plt.figure(f"{SN_idx2key[i]}")
+        data = actions[:, i]
+        plt.plot(data)
+
+    # plot dx, dy 散点图
+    dx = actions[:, -2]
+    dy = actions[:, -1]
+    plt.figure("dx dy")
+    plt.scatter(dx, dy)
+
+    plt.show(block=False)
+    # exit()
+    # 绘制action的分布
+    # 检查
+def plot_test():
+    # 绘制测试
+    # 绘制一维数据随时间的变化
+    # 绘制二维散点图
+
+    # 1. 一维数据随时间的变化
+    n_frames = 100
+    time = np.arange(n_frames)
+    data = np.random.randn(n_frames)
+    plt.plot(time, data)
+
+    # 2. 二维散点图
+    n_points = 100
+    x = np.random.randn(n_points)
+    y = np.random.randn(n_points)
+    plt.figure()
+    plt.scatter(x, y)
+
+    plt.show()
+
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
