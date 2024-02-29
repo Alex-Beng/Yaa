@@ -71,4 +71,5 @@ Yet Another Artificial GI-player
 - ``test.sh`` 固定参数运行 act_infer.py 的脚本
 - ``train.sh`` 固定参数运行 act_imitate_learning.py 的脚本
 - ``utils.py`` 数据集定义和处理的utils，以及其他一些utils
+- ``vis.sh`` 简化参数运行 visualize_hdf5.py 的脚本
 - ``visualize_hdf5.py`` 可视化重采样后的录制数据集
