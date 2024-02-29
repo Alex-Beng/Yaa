@@ -99,6 +99,8 @@ def train_bc(train_dataloader, val_dataloader, config):
     set_seed(seed)
 
     policy = ACTPolicy(policy_config)
+    # TODO: make pretrained ckpt configurable
+    policy.load_state_dict(torch.load(os.path.join(ckpt_dir, 'policy_best.ckpt')))
     policy.cuda()
     optimizer = policy.configure_optimizers()
 
