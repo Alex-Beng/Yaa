@@ -12,7 +12,6 @@ from torch.nn.utils.rnn import pad_sequence
 
 import IPython
 e = IPython.embed
-# 这个交互式后面也没用到啊？？
 
 class EpisodicDataset(torch.utils.data.Dataset):
     def __init__(self, episode_ids, dataset_dir, camera_names, norm_stats, samp_traj=True):
