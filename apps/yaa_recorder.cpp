@@ -286,6 +286,7 @@ int main(int argc, char const *argv[]) {
     is_recording = false;
 
     // init HWND
+    // TODO: whether cloud can get alpha
     HWND ge_win_handle;
     auto found = find_window_local(ge_win_handle);
     if (!found) {
