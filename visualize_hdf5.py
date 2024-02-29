@@ -26,9 +26,9 @@ def main(args):
     if episode_idx is None:
         episode_idx = 0
     hdf5_path = os.path.join(dataset_dir, f'{episode_idx}.hdf5')
-    state, action, image_dict = load_hdf5(hdf5_path)
+    states, actions, image_dict = load_hdf5(hdf5_path)
 
-    save_videos(image_dict, state, action, DT, os.path.join(dataset_dir, f'{episode_idx}_hdf5.mp4'))
+    save_videos(image_dict, states, actions, DT, os.path.join(dataset_dir, f'{episode_idx}_hdf5.mp4'))
 
 def save_videos(image_dict, states, actions, dt, video_path):
     from resample_record import state_to_str
