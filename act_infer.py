@@ -224,8 +224,6 @@ def test_on_data(config):
                 print(action_bin)
                 print(np.round(ground_action, 1))
                 # TODO: fix recording !!!!!! 应该是Mro和ML的idx发生了神秘的交换
-                # TODO: 解释 dx dy 的量级为什么这么小，可能是计算数据集mean, std时padding的问题
-                # TODO: 研究 norm 对于示教中全零数据的影响
                 for state_id in range(state_dim-3):
                     if action_bin[state_id] == curr_state[state_id]:
                         continue

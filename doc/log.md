@@ -78,10 +78,10 @@ mouse event: state = 0/1/2/4/8/16/32/1024
 |32| middle up|
 |1024| wheel, rolling, <0 for down, >0 for up, K*120 for rolling|
 
-逆天，recorder写错了，wheel的rolling没有被记录。
+~~逆天，recorder写错了，wheel的rolling没有被记录。~~ fixed
 
-是否需要考虑归一化rolling dx dy？
-管他呢，先把丹练起来再说。
+~~是否需要考虑归一化rolling dx dy？~~ done in training & inference，记录action & state 的mean 和std
+
 
 ## 推理相关
 
@@ -308,6 +308,26 @@ policy cost time: 0.04002499580383301
 </details>
 
 TODO: 测试onnx
+
+## explain TODOs in code
+
+### 解释 dx dy 的量级为什么这么小，可能是计算数据集mean, std时padding的问题
+
+本来就这么小，dx dy中有大量的接近0的数据，因此mean和std都很小。
+
+![mdx](../pics/Mdx.png)
+![mdy](../pics/Mdy.png)
+
+padding的问题，已经解决，被copilot坑了。
+[-pad_len:] 补成了 [pad_len:]，修改后用新方法验证一致。
+
+### 研究 norm 对于示教中全零数据的影响
+
+主要是std会变成0，导致推理时候除0错误。所以act原实现进行了clip
+
+
+
+
 
 
 ## SOME RESULTS in intercption test
