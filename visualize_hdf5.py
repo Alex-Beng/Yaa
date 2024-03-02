@@ -122,8 +122,11 @@ def plot_dstb(actions):
     dy = actions[:, -1]
     plt.figure("dx dy")
     plt.scatter(dx, dy)
+    # print mean and std of dx dy
+    print(f'mean dx {np.mean(dx)} std dx {np.std(dx)}')
+    print(f'mean dy {np.mean(dy)} std dy {np.std(dy)}')
 
-    plt.show(block=False)
+    plt.show(block=True)
     # exit()
     # 绘制action的分布
     # 检查
