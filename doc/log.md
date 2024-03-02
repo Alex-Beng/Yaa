@@ -82,6 +82,18 @@ mouse event: state = 0/1/2/4/8/16/32/1024
 
 ~~是否需要考虑归一化rolling dx dy？~~ done in training & inference，记录action & state 的mean 和std
 
+目前（名椎滩好感）没被用到的action dims及对应的按键：
+|||
+|---|---|
+|6|X|
+|9|T|
+|10|Z|
+|11|1|
+|12|2|
+|13|3|
+|14|4|
+|16|MRo|
+
 
 ## 推理相关
 
