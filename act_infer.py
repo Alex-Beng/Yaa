@@ -160,6 +160,9 @@ def test_on_data(config):
         image_list = [] # for video?
         state_list = []
         target_state_list = []
+        if save_video:
+            video_path = f'./{task_name}_{episode_id}.mp4'
+            out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), 10, (640*2, 480))
 
         with torch.inference_mode():
             for t in range(max_timestamps):
@@ -205,22 +208,24 @@ def test_on_data(config):
                 else:
                     # 就是每隔 chunk size推理一次
                     raw_action = all_actions[:, t % query_frequecy]
-                # print(raw_action.shape)
+                
                 # 需要后处理 action
                 raw_action = raw_action.squeeze(0).cpu().numpy()
+                print(np.round(raw_action, 2))
                 # 恢复到采集时候的分布
                 action = post_process(raw_action)
                 # print action in 两位小数
-                print(np.round(action, 2))
+                print(np.round(action, 1))
+                # print(ground_action)
 
                 # 需要把action到离散状态
                 # TODO: make threshold configurable
                 # 把 action 中 < min_thre 的部分置为 0, > max_thre 的部分置为 1
-                min_thre = 0.1
-                max_thre = 0.9
+                min_thre = 0.5
+                max_thre = 0.5
                 action_bin = np.zeros_like(action, dtype=np.int8)
                 action_bin[action < min_thre] = 0
-                action_bin[action > max_thre] = 1
+                action_bin[action >= max_thre] = 1
 
                 target_state = action
                 # print(np.max(action), np.min(action))
@@ -228,22 +233,30 @@ def test_on_data(config):
                 # action影响curr_state
                 # 获得发生变动的键盘状态，进而获得实际 人的动作
                 human_actions = []
-                print(curr_state)
-                print(action_bin)
-                print(np.round(ground_action, 1))
-                # TODO: fix recording !!!!!! 应该是Mro和ML的idx发生了神秘的交换
+                human_actions_gt = []
+                show_updown = False
                 for state_id in range(state_dim-3):
-                    if action_bin[state_id] == curr_state[state_id]:
-                        continue
+                    if show_updown:
+                        if action_bin[state_id] == curr_state[state_id]:
+                            continue
+                        else:
+                            human_action = f"{SN_idx2key[state_id]} {'up' if action_bin[state_id] == 0 else 'down'}"
+                            if human_action[0] == ' ':
+                                human_action = 'sp' + human_action[1:]
+                            # print(f'append in {state_id}')
+                            human_actions.append(human_action)
                     else:
-                        human_action = f"{SN_idx2key[state_id]} {'up' if action_bin[state_id] == 0 else 'down'}"
-                        if human_action[0] == ' ':
-                            human_action = 'space' + human_action[1:]
-                        print(f'append in {state_id}')
-                        human_actions.append(human_action)
+                        if action_bin[state_id]:
+                            human_action = f"{SN_idx2key[state_id]}"
+                            human_actions.append(human_action)
+                        if ground_action[state_id]:
+                            human_action = f"{SN_idx2key[state_id]}"
+                            human_actions_gt.append(human_action)
                     curr_state[state_id] = action_bin[state_id]
-                
+                dx, dy = action[-2], action[-1]
+                dx_gt, dy_gt = ground_action[-2], ground_action[-1]
                 print(human_actions)
+                print(human_actions_gt)
                 
                 # do nothing in data env actually
                 if not env.step(action):
@@ -255,12 +268,27 @@ def test_on_data(config):
                 
                 # update curr frame
                 # TODO: plot dx dy in frame
+                
+                image_dict = env.render()
+                # 先把图像拼接起来
+                curr_image = np.concatenate([image_dict[cam_name] for cam_name in camera_names], axis=1)
+                # frame 上显示 str
+                kb_events_str = ','.join(human_actions)
+                kb_events_str_gt = ','.join(human_actions_gt)
+                curr_image = cv2.putText(curr_image, kb_events_str, (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 0, 255), 3, cv2.LINE_AA)
+                curr_image = cv2.putText(curr_image, kb_events_str_gt, (10, 200), cv2.FONT_HERSHEY_SIMPLEX, 3, (0, 255, 0), 3, cv2.LINE_AA)
+
+                # 在frame 中间绘制一个箭头，表示dx dy
+                dx, dy = int(dx), int(dy)
+                dx_gt, dy_gt = int(dx_gt), int(dy_gt)
+                curr_image = cv2.arrowedLine(curr_image, (640, 240), (640+dx, 240+dy), (0, 0, 255), 2)
+                curr_image = cv2.arrowedLine(curr_image, (640, 240), (640+dx_gt, 240+dy_gt), (0, 255, 0), 2)
                 if onscreen_render:
-                    image_dict = env.render()
-                    # 先把图像拼接起来
-                    curr_image = np.concatenate([image_dict[cam_name] for cam_name in camera_names], axis=1)
                     cv2.imshow('image', curr_image)
-                    cv2.waitKey(0)
+                    cv2.waitKey(1)
+                if save_video:
+                    out.write(curr_image)                    
+                print(f'step {t}/{max_timestamps}')
     
 
     env = GIDataEnv(config)

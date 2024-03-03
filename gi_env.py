@@ -60,8 +60,9 @@ class GIDataEnv:
         image_dict = {}
         for i in range(len(self.camera_names)):
             # make it numpy in shape (480, 640, 3)
-            curr_image = image_tensors[i].numpy().transpose(1, 2, 0)
-            # print(curr_image.shape)
+            # 逆天，这个转置操作
+            # 错误的两次预处理，dim顺序的问题在这里又改回去了
+            curr_image = image_tensors[i].numpy()
             image_dict[self.camera_names[i]] = curr_image
         return image_dict
         

@@ -134,19 +134,22 @@ class EpisodicDatasetTest(torch.utils.data.Dataset):
         ts = self.start_ts + index
         
         # image, action
+        # 不要做预处理，只要跟原始捕获一致即可
         image_dict = dict()
         for cam_name in self.camera_names:
             image_dict[cam_name] = self.hdf5_handle[f'/obs/images/{cam_name}'][ts]
         all_cam_images = []
         for cam_name in self.camera_names:
             all_cam_images.append(image_dict[cam_name])
+        # stack 多了一个维度，k h w c 
         all_cam_images = np.stack(all_cam_images, axis=0)
+    
         image_data = torch.from_numpy(all_cam_images)
-        image_data = torch.einsum('k h w c -> k c h w', image_data)
-        image_data = image_data / 255.0
+        # image_data = torch.einsum('k h w c -> k c h w', image_data)
+        # image_data = image_data / 255.0
         
         action = self.hdf5_handle['/action'][ts]
-        action = self.preprocess(action)
+        # action = self.preprocess(action)
 
         return image_data, action
 
@@ -315,3 +318,6 @@ def detach_dict(d):
 def set_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
+
+if __name__ == "__main__":
+    dts = EpisodicDatasetTest([0])
