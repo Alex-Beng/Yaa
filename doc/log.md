@@ -153,6 +153,8 @@ SOLUTION：将Windows的鼠标设置中的“提高指针精确度”关闭，�
 
 ![act_train](../pics/train_loss.png)
 
+有人傻逼地训练时把samp traj设成了false，相当于只用前面100步的chunk进行训练。
+
 
 ## 环境依赖
 
