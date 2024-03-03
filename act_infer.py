@@ -291,9 +291,6 @@ def test_on_data(config):
                 print(f'step {t}/{max_timestamps}')
     
 
-    env = GIDataEnv(config)
-
-    pass
 
 def test_on_real(config):
     # 
