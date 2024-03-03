@@ -163,7 +163,7 @@ TODOs:
 - [ ] 或者增加“冷门“动作的采样概率。
 - [ ] 量化+onnx部署。
 
-Thinks to @XizoB
+Thinks to @[XizoB](https://github.com/XizoB)
 
 ## 环境依赖
 
