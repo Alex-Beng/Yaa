@@ -158,12 +158,13 @@ SOLUTION：将Windows的鼠标设置中的“提高指针精确度”关闭，�
 
 TODOs: 
 
+- [ ] 删除录制开始时的空操作帧。
 - [ ] 动作添加sigmoid，变为二分类，更好预测键盘离散动作。
 - [ ] 对于“冷门”动作添加置信度，添加计算loss的权重。
 - [ ] 或者增加“冷门“动作的采样概率。
 - [ ] 量化+onnx部署。
 
-Thinks to @[XizoB](https://github.com/XizoB)
+Thank to @[XizoB](https://github.com/XizoB)
 
 ## 环境依赖
 
