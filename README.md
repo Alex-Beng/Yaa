@@ -54,7 +54,7 @@ TODOs more important now:
 - [ ] 或者增加“冷门“动作的采样概率。
 - [ ] 量化+onnx部署。
 
-Thank to @[XizoB](https://github.com/XizoB) for the previous TODOs.
+Thank to @[XizoB](https://github.com/XizoB) for the first few TODOs.
 
 
 # 仓库组成
