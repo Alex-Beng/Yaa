@@ -23,6 +23,10 @@ from gi_env import GIDataEnv, GIRealEnv
 import IPython
 e = IPython.embed
 
+# TODO: make device configurable
+device = "cuda" if torch.cuda.is_available() else "cpu"
+# device = "cpu"
+
 def main(args):
     # TODO: make seed configurable
     set_seed(1)
@@ -105,7 +109,7 @@ def test_on_data(config):
     policy = ACTPolicy(policy_config)
     loading_status =policy.load_state_dict(torch.load(ckpt_path))
     print(f'loading status: {loading_status}')
-    policy.cuda()
+    policy = policy.to(device)
     policy.eval()
     print(f'policy loaded from {ckpt_path}')
 
@@ -142,11 +146,13 @@ def test_on_data(config):
         if temporal_agg:
             # max_ts, max_ts+chunk size, state_dim
             # 记录推理的actions ?
-            all_time_actions = torch.zeros([max_timestamps, max_timestamps+num_queries, state_dim]).cuda()
+            all_time_actions = torch.zeros([max_timestamps, max_timestamps+num_queries, state_dim])
+            all_time_actions = all_time_actions.to(device)
         # IN Yaa, the state is the mskb
         # 同时引入假设，初始为 [0] * state_dim
         # 所以需要在推理的时候，维护一个 state 
-        state_history = torch.zeros([1, max_timestamps, state_dim]).cuda()
+        state_history = torch.zeros([1, max_timestamps, state_dim])
+        state_history = state_history.to(device)
 
         # mksb state
         # 最后三个为鼠标滚轮, dx, dy。无需考虑状态
@@ -163,7 +169,8 @@ def test_on_data(config):
                 state_numpy = deepcopy(curr_state)
                 state = pre_process(state_numpy)
                 # make it to [1, state_dim]
-                state = torch.from_numpy(state).float().cuda().unsqueeze(0)
+                state = torch.from_numpy(state).float().unsqueeze(0)
+                state = state.to(device)
                 state_history[0, t] = state
                 
                 # get image from obs
@@ -177,10 +184,10 @@ def test_on_data(config):
                 if t % query_frequecy == 0:
                     # predict 一个 action chunk
                     # 1, chunk size, state_dim
-                    # t0 = time.time()
+                    t0 = time.time()
                     print(np.round(state_numpy, 2))
                     all_actions = policy(state, curr_image)
-                    # print(f'policy cost time: {time.time() - t0}')
+                    print(f'policy cost time: {time.time() - t0}')
                 
                 # 进行时间集成！
                 if temporal_agg:
@@ -192,7 +199,8 @@ def test_on_data(config):
                     k = 0.01
                     exp_weights = np.exp(-k * np.arange(len(actions_for_curr_step)))
                     exp_weights = exp_weights / exp_weights.sum()
-                    exp_weights = torch.from_numpy(exp_weights).cuda().unsqueeze(dim=1)
+                    exp_weights = torch.from_numpy(exp_weights).unsqueeze(dim=1)
+                    exp_weights = exp_weights.to(device)
                     raw_action = (actions_for_curr_step * exp_weights).sum(dim=0, keepdim=True)
                 else:
                     # 就是每隔 chunk size推理一次
@@ -271,7 +279,8 @@ def image_preprocess(image_dict, camera_names):
         curr_image = rearrange(image_dict[cam_name], 'h w c -> c h w')
         curr_images.append(curr_image)
     curr_image = np.stack(curr_images, axis=0)
-    curr_image = torch.from_numpy(curr_image / 255.0).float().cuda().unsqueeze(0)
+    curr_image = torch.from_numpy(curr_image / 255.0).float().unsqueeze(0)
+    curr_image = curr_image.to(device)
     return curr_image
 
 
