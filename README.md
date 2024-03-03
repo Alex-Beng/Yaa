@@ -45,6 +45,18 @@ Yet Another Artificial GI-player
 - [ ] 推理部署
   - [ ] onnx部署+测试推理速度，需要达到20Hz
 
+
+TODOs more important now:
+
+- [ ] 删除录制开始时的空操作帧。
+- [ ] 动作添加sigmoid，变为二分类，更好预测键盘离散动作。
+- [ ] 对于“冷门”动作添加置信度，添加计算loss的权重。
+- [ ] 或者增加“冷门“动作的采样概率。
+- [ ] 量化+onnx部署。
+
+Thank to @[XizoB](https://github.com/XizoB) for the previous TODOs.
+
+
 # 仓库组成
 
 - ``apps/`` cpp写的apps，每个cpp文件对应一个应用
