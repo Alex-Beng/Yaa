@@ -210,8 +210,8 @@ def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_s
     norm_stats, max_episode_len = get_norm_stats(dataset_dir, num_episodes)
 
     # construct dataset and dataloader
-    train_dataset = EpisodicDataset(train_indices, dataset_dir, camera_names, norm_stats, False)
-    val_dataset = EpisodicDataset(val_indices, dataset_dir, camera_names, norm_stats, False)
+    train_dataset = EpisodicDataset(train_indices, dataset_dir, camera_names, norm_stats, True)
+    val_dataset = EpisodicDataset(val_indices, dataset_dir, camera_names, norm_stats, True)
     # print(f'batch size train: {batch_size_train}, batch size val: {batch_size_val}')
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size_train, 
                                   shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,
