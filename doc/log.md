@@ -163,6 +163,8 @@ TODOs:
 - [ ] 或者增加“冷门“动作的采样概率。
 - [ ] 量化+onnx部署。
 
+Thinks to @XizoB
+
 ## 环境依赖
 
 cpp的
