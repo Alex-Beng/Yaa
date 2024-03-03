@@ -103,6 +103,10 @@ mouse event: state = 0/1/2/4/8/16/32/1024
 
 GPU推理，1650上940MB显存，95%使用率。推理频率在25Hz左右。
 
+CPU推理，5800H，推理用时0.4s，推理频率在2.5Hz左右。
+
+TODO: CPU+onnx；CPU+onnx+量化
+
 <details>
 <summary>点击展开/折叠</summary>
 
