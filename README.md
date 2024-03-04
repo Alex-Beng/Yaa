@@ -50,10 +50,10 @@ Yet Another Artificial GI-player
 
 TODOs more important now:
 
-- [ ] 删除录制开始时的空操作帧。
-- [ ] 动作添加sigmoid，变为二分类，更好预测键盘离散动作。
+- [ ] 重新设计action head。添加sigmoid，变为分类，更好预测键盘离散动作。
 - [ ] 对于“冷门”动作添加置信度，添加计算loss的权重。
 - [ ] 或者增加“冷门“动作的采样概率。
+- [ ] 删除录制开始时的空操作帧。
 - [ ] 真实环境中的量化+onnx部署
 
 Thank to @[XizoB](https://github.com/XizoB) for the first few TODOs.
