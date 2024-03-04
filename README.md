@@ -41,7 +41,7 @@ Yet Another Artificial GI-player
         - [ ] 从特定锚点出发拾取狗粮
         - [ ] 进行地脉的打
 - [ ] 评估方法？
-  - [ ] action L1 loss 作为离散动作的阈值？
+  - [ ] ~~action L1 loss 作为离散动作的阈值~~ 添加激活函数，变为二分类
 - [ ] 推理部署
   - [x] 在数据上进行推理
   - [ ] 在真实环境进行推理
@@ -54,7 +54,7 @@ TODOs more important now:
 - [ ] 动作添加sigmoid，变为二分类，更好预测键盘离散动作。
 - [ ] 对于“冷门”动作添加置信度，添加计算loss的权重。
 - [ ] 或者增加“冷门“动作的采样概率。
-- [ ] 量化+onnx部署。
+- [ ] 真实环境中的量化+onnx部署
 
 Thank to @[XizoB](https://github.com/XizoB) for the first few TODOs.
 
