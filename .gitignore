@@ -20,3 +20,4 @@ __pycache__
 /models/
 datasets/
 detr/detr.egg-info/
+/*.mp4

@@ -8,7 +8,7 @@ Yet Another Artificial GI-player
 
 # 介绍
 
-基于~~目前大热的Diffusion Policy~~、ACT等~~强化学习/~~模仿学习算法，实现原神的基于动作生成的AI。
+基于~~目前大热的Diffusion Policy~~、ACT等~~强化学习~~/模仿学习算法，实现原神的基于动作生成的AI。
 
 # TODOs
 
@@ -41,10 +41,23 @@ Yet Another Artificial GI-player
         - [ ] 从特定锚点出发拾取狗粮
         - [ ] 进行地脉的打
 - [ ] 评估方法？
+  - [ ] action L1 loss 作为离散动作的阈值？
 - [ ] 推理部署
   - [x] 在数据上进行推理
   - [ ] 在真实环境进行推理
   - [ ] onnx部署+测试推理速度，需要达到20Hz
+
+
+TODOs more important now:
+
+- [ ] 删除录制开始时的空操作帧。
+- [ ] 动作添加sigmoid，变为二分类，更好预测键盘离散动作。
+- [ ] 对于“冷门”动作添加置信度，添加计算loss的权重。
+- [ ] 或者增加“冷门“动作的采样概率。
+- [ ] 量化+onnx部署。
+
+Thank to @[XizoB](https://github.com/XizoB) for the first few TODOs.
+
 
 # 仓库组成
 
@@ -75,3 +88,69 @@ Yet Another Artificial GI-player
 - ``utils.py`` 数据集定义和处理的utils，以及其他一些utils
 - ``vis.sh`` 简化参数运行 visualize_hdf5.py 的脚本
 - ``visualize_hdf5.py`` 可视化重采样后的录制数据集
+
+# 使用
+
+
+分为录制示教和训练两个阶段（还有推理，但是还没做）。
+
+工作流为：录制 -> 重采样到20Hz -> 训练 -> 推理
+
+## 录制示教
+
+基于CPP。
+
+- Windows 10
+- MSVC 我也不知道需要什么版本
+- CMake 3.14 单纯是凑个π，我也不知道需要什么版本
+
+CPP的依赖库通过CMake下载，所以不需要额外的依赖。
+
+运行时需要手动下载opencv编码视频依赖的dll，见运行时opencv的提示，有网页链接。
+
+
+编译：
+```shell
+mkdir build
+cd build
+cmake ..
+MSBuild.exe ALL_BUILD.vcxproj /p:Configuration=Release
+```
+
+运行：
+```shell
+./bin/release/yaa_recorder.exe --help
+```
+
+录制将会输出到：
+```cpp
+// output_path / task_name / 
+//  {episode_id}.mp4 
+//  {episode_id}_alpha.mp4 
+//  {episode_id}_mskb.jsonl
+//  {episode_id}_video.json
+```
+
+|名字|内容|
+|---|---|
+|{episode_id}.mp4|主画面|
+|{episode_id}_alpha.mp4|alpha通道|
+|{episode_id}_mskb.jsonl|键鼠事件|
+|{episode_id}_video.json|视频帧时间戳|
+
+
+## 训练
+
+基于Python。
+
+环境配置与act一致。见[act install](https://github.com/tonyzhaozh/act?tab=readme-ov-file#installation)。
+
+重采样录制数据集到20Hz：
+```shell
+python resample_record.py --help
+```
+
+训练：
+```shell
+python act_imitate_learning.py --help
+```
