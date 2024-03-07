@@ -15,6 +15,7 @@ from policy import ACTPolicy
 
 # TODO: make device configurable
 device = "cuda" if torch.cuda.is_available() else "cpu"
+# device = 'cpu'
 
 def main(args):
     # TODO: make seed configurable
@@ -157,6 +158,7 @@ def train_bc(train_dataloader, val_dataloader, config):
         if epoch % 100 == 0:
             ckpt_path = os.path.join(ckpt_dir, f'policy_epoch_{epoch}_seed_{seed}.ckpt')
             torch.save(policy.state_dict(), ckpt_path)
+        if epoch % 20 == 0:
             plot_history(train_history, validation_history, epoch, ckpt_dir, seed)
 
     ckpt_path = os.path.join(ckpt_dir, f'policy_last.ckpt')
