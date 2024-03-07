@@ -49,6 +49,7 @@ class ACTPolicy(nn.Module):
         # TODO: copy from yap-train
         # 其实如果是网络结构全变了，strict=False应该就够用了
         # yap train 是只改最后的fc层，所以可以通过idx进一步填充
+        # 这里大概是chunk size和action dim会变？
         raise NotImplementedError
         
 
