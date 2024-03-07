@@ -1,4 +1,5 @@
 # copy from act shamelessly.
+import torch
 import torch.nn as nn
 from torch.nn import functional as F
 import torchvision.transforms as transforms
@@ -43,6 +44,13 @@ class ACTPolicy(nn.Module):
 
     def configure_optimizers(self):
         return self.optimizer
+    
+    def load_can_loadd(self, ckpt_path):
+        # TODO: copy from yap-train
+        # 其实如果是网络结构全变了，strict=False应该就够用了
+        # yap train 是只改最后的fc层，所以可以通过idx进一步填充
+        raise NotImplementedError
+        
 
 # IN Yaa, useless
 class CNNMLPPolicy(nn.Module):
