@@ -50,7 +50,7 @@ Yet Another Artificial GI-player
 
 TODOs more important now:
 
-- [ ] 重新设计action head。添加sigmoid，变为分类，更好预测键盘离散动作。
+- [x] 重新设计action head。添加sigmoid，变为分类，更好预测键盘离散动作。
 - [ ] 对于“冷门”动作添加置信度，添加计算loss的权重。
 - [ ] 或者增加“冷门“动作的采样概率。
 - [ ] 删除录制开始时的空操作帧。
