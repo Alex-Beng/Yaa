@@ -93,6 +93,7 @@ Thank to @[XizoB](https://github.com/XizoB) for the first few TODOs.
 
 
 分为录制示教和训练两个阶段（还有推理，但是还没做）。
+名椎滩好感原始录制数据和使用colab进行训练notebook见[这里](https://drive.google.com/drive/folders/1m2RxUXDbJZ8_RCGmZfGicHqoe-YuQYEP?usp=drive_link)。
 
 工作流为：录制 -> 重采样到20Hz -> 训练 -> 推理
 
