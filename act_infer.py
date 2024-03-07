@@ -63,6 +63,7 @@ def main(args):
                     'dec_layers': dec_layers,
                     'nheads': nheads,
                     'camera_names': camera_names,
+                    'device': device,
                     }
     config = {
         'ckpt_dir': ckpt_dir,
