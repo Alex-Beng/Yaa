@@ -46,7 +46,8 @@ class YaaActionHead(nn.Module):
     def forward(self, x):
         ms = self.fc1(x)
         kb = self.fc2(x)
-        return torch.cat([ms, kb], dim=2)
+        # 有个傻逼把ms和kb弄反了，我不说是谁
+        return torch.cat([kb, ms], dim=2)
 
 class DETRVAE(nn.Module):
     """ This is the DETR module that performs object detection """
