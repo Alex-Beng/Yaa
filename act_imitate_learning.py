@@ -13,6 +13,9 @@ from utils import set_seed, load_data, compute_dict_mean, detach_dict
 from constants import TASK_CONFIG, STATE_DIM
 from policy import ACTPolicy
 
+# TODO: make device configurable
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 def main(args):
     # TODO: make seed configurable
     set_seed(1)
@@ -53,6 +56,7 @@ def main(args):
                     'dec_layers': dec_layers,
                     'nheads': nheads,
                     'camera_names': camera_names,
+                    'device': device,
                     }
     config = {
         'num_epochs': num_epochs,
@@ -100,8 +104,8 @@ def train_bc(train_dataloader, val_dataloader, config):
 
     policy = ACTPolicy(policy_config)
     # TODO: make pretrained ckpt configurable
-    policy.load_state_dict(torch.load(os.path.join(ckpt_dir, 'policy_best.ckpt')))
-    policy.cuda()
+    policy.load_state_dict(torch.load(os.path.join(ckpt_dir, 'policy_best.ckpt'), device), strict=False)
+    policy = policy.to(device)
     optimizer = policy.configure_optimizers()
 
     train_history = []
@@ -175,7 +179,7 @@ def forward_pass(data, policy):
     # print(image_data.dtype, qpos_data.dtype, action_data.dtype, is_pad.dtype)
     # print(image_data.shape, qpos_data.shape, action_data.shape, is_pad.shape)
     # exit()
-    image_data, qpos_data, action_data, is_pad = image_data.cuda(), qpos_data.cuda(), action_data.cuda(), is_pad.cuda()
+    image_data, qpos_data, action_data, is_pad = image_data.to(device), qpos_data.to(device), action_data.to(device), is_pad.to(device)
     return policy(qpos_data, image_data, action_data, is_pad) # TODO remove None
 
 def plot_history(train_history, validation_history, num_epochs, ckpt_dir, seed):

@@ -31,6 +31,23 @@ def get_sinusoid_encoding_table(n_position, d_hid):
     return torch.FloatTensor(sinusoid_table).unsqueeze(0)
 
 
+class YaaActionHead(nn.Module):
+    def __init__(self, hidden_dim, state_dim) -> None:
+        super().__init__()
+        # state 最后三维鼠标的 MRo dx dy 还是用线性层
+        # 前面均是键盘的状态，在添加sigmoid
+        
+        # 对于ms：fc；对于kb：fc+sigmoid
+        self.fc1 = nn.Linear(hidden_dim, 3)
+        self.fc2 = nn.Sequential(
+            nn.Linear(hidden_dim, state_dim-3),
+            nn.Sigmoid()
+        )
+    def forward(self, x):
+        ms = self.fc1(x)
+        kb = self.fc2(x)
+        return torch.cat([ms, kb], dim=2)
+
 class DETRVAE(nn.Module):
     """ This is the DETR module that performs object detection """
     def __init__(self, backbones, transformer, encoder, state_dim, num_queries, camera_names):
@@ -49,7 +66,9 @@ class DETRVAE(nn.Module):
         self.transformer = transformer
         self.encoder = encoder
         hidden_dim = transformer.d_model
-        self.action_head = nn.Linear(hidden_dim, state_dim)
+        # self.action_head = nn.Linear(hidden_dim, state_dim)
+        self.action_head = YaaActionHead(hidden_dim, state_dim)
+
         self.is_pad_head = nn.Linear(hidden_dim, 1)
         self.query_embed = nn.Embedding(num_queries, hidden_dim)
         if backbones is not None:
