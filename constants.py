@@ -32,6 +32,7 @@ STATE_DIM = len(SN_idx2key)
 # key of interest -> idx
 SN = dict(zip(SN_idx2key, range(STATE_DIM)))
 
+# TODO: is there any useful lib to do this?
 key2scancode = {
     'W': 0x11,
     'A': 0x1E,
