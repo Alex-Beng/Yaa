@@ -59,10 +59,6 @@ TODOs more important now:
 - [ ] 测试CNNMLP模型
 - [ ] backbone 不给梯度的选项
 - [ ] 键盘和鼠标动作使用不同loss
-- [ ] 测试去掉CVAE encoder模型
-- [ ] 测试CNNMLP模型
-- [ ] backbone 不给梯度的选项
-- [ ] 键盘和鼠标动作使用不同loss
 
 Thank to @[XizoB](https://github.com/XizoB) for the first few TODOs.
 
