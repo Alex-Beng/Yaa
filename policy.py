@@ -53,21 +53,17 @@ class ACTPolicy(nn.Module):
             # mask掉pad的部分
             mouse_l1 = (mouse_l1 * ~is_pad.unsqueeze(-1)).mean()
             keyboard_ce = (keyboard_ce * ~is_pad.unsqueeze(-1)).mean()
-            print(f'Mouse L1 {mouse_l1}, Keyboard CE {keyboard_ce}')
+            # print(f'Mouse L1 {mouse_l1}, Keyboard CE {keyboard_ce}')
             # keyboard_ce *= 1.2
             # mouse_l1 *= 0.8
-            l1 = (mouse_l1 + keyboard_ce) / 2
+            action_loss_sum = (mouse_l1 + keyboard_ce) / 2
             # l1 = keyboard_ce
             
-            if False:
-                all_l1 = F.l1_loss(actions, a_hat, reduction='none')
-                l1 = (all_l1 * ~is_pad.unsqueeze(-1)).mean()
-                # print(f'L1 {l1}')
-                
-            
-            loss_dict['l1'] = l1
+            loss_dict['action_loss_sum'] = action_loss_sum
+            loss_dict['mouse_l1'] = mouse_l1
+            loss_dict['keyboard_ce'] = keyboard_ce
             loss_dict['kl'] = total_kld[0]
-            loss_dict['loss'] = loss_dict['l1'] + loss_dict['kl'] * self.kl_weight
+            loss_dict['loss'] = loss_dict['action_loss_sum'] + loss_dict['kl'] * self.kl_weight
             return loss_dict
         else: # inference time
             a_hat, _, (_, _) = self.model(qpos, image, env_state) # no action, sample from prior
