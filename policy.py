@@ -29,11 +29,37 @@ class ACTPolicy(nn.Module):
             actions = actions[:, :self.model.num_queries]
             is_pad = is_pad[:, :self.model.num_queries]
 
+            # mouse action & keyboard action
+            mouse_actions = actions[:, :, -3:]
+            keyboard_actions = actions[:, :, :-3]
+
             a_hat, is_pad_hat, (mu, logvar) = self.model(qpos, image, env_state, actions, is_pad)
             total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
             loss_dict = dict()
-            all_l1 = F.l1_loss(actions, a_hat, reduction='none')
-            l1 = (all_l1 * ~is_pad.unsqueeze(-1)).mean()
+            # action shape batch_size, chunk_size, action_dim
+            mouse_a_hat = a_hat[:, :, -3:]
+            keyboard_a_hat = a_hat[:, :, :-3]
+
+            # mouse 使用 l1 loss，keyboard 使用 binary cross entropy
+            mouse_l1 = F.l1_loss(mouse_actions, mouse_a_hat, reduction='none')
+            keyboard_ce = F.binary_cross_entropy_with_logits(keyboard_a_hat, keyboard_actions, reduction='none')
+            # keyboard_ce = F.l1_loss(keyboard_a_hat, keyboard_actions, reduction='none')
+            
+            # mask掉pad的部分
+            mouse_l1 = (mouse_l1 * ~is_pad.unsqueeze(-1)).mean()
+            keyboard_ce = (keyboard_ce * ~is_pad.unsqueeze(-1)).mean()
+            print(f'Mouse L1 {mouse_l1}, Keyboard CE {keyboard_ce}')
+            keyboard_ce *= 1.2
+            mouse_l1 *= 0.8
+            l1 = (mouse_l1 + keyboard_ce) / 2
+            l1 = keyboard_ce
+            
+            if False:
+                all_l1 = F.l1_loss(actions, a_hat, reduction='none')
+                l1 = (all_l1 * ~is_pad.unsqueeze(-1)).mean()
+                # print(f'L1 {l1}')
+                
+            
             loss_dict['l1'] = l1
             loss_dict['kl'] = total_kld[0]
             loss_dict['loss'] = loss_dict['l1'] + loss_dict['kl'] * self.kl_weight
