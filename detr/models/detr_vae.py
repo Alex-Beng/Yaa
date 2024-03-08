@@ -13,6 +13,12 @@ import numpy as np
 import IPython
 e = IPython.embed
 
+# TODO: test this
+# TODO: make it configurable
+STATE_DIM = 12
+def set_state_dim(state_dim):
+    global STATE_DIM
+    STATE_DIM = state_dim
 
 def reparametrize(mu, logvar):
     std = logvar.div(2).exp()
@@ -77,11 +83,11 @@ class DETRVAE(nn.Module):
             self.backbones = nn.ModuleList(backbones)
             # TODO: make it configurable
             self.backbones.requires_grad_(False)
-            self.input_proj_robot_state = nn.Linear(19, hidden_dim)
+            self.input_proj_robot_state = nn.Linear(STATE_DIM, hidden_dim)
             # TODO: rm hardcode
         else:
             # input_dim = 14 + 7 # robot_state + env_state
-            self.input_proj_robot_state = nn.Linear(19, hidden_dim)
+            self.input_proj_robot_state = nn.Linear(STATE_DIM, hidden_dim)
             self.input_proj_env_state = nn.Linear(7, hidden_dim)
             self.pos = torch.nn.Embedding(2, hidden_dim)
             self.backbones = None
@@ -89,8 +95,8 @@ class DETRVAE(nn.Module):
         # encoder extra parameters
         self.latent_dim = 32 # final size of latent z # TODO tune
         self.cls_embed = nn.Embedding(1, hidden_dim) # extra cls token embedding
-        self.encoder_action_proj = nn.Linear(19, hidden_dim) # project action to embedding
-        self.encoder_joint_proj = nn.Linear(19, hidden_dim)  # project qpos to embedding
+        self.encoder_action_proj = nn.Linear(STATE_DIM, hidden_dim) # project action to embedding
+        self.encoder_joint_proj = nn.Linear(STATE_DIM, hidden_dim)  # project qpos to embedding
         self.latent_proj = nn.Linear(hidden_dim, self.latent_dim*2) # project hidden state to latent std, var
         self.register_buffer('pos_table', get_sinusoid_encoding_table(1+1+num_queries, hidden_dim)) # [CLS], qpos, a_seq
 
@@ -250,7 +256,7 @@ def build_encoder(args):
 
 
 def build(args):
-    state_dim = 19 # TODO hardcode
+    state_dim = STATE_DIM # TODO hardcode
 
     # From state
     # backbone = None # from state for now, no need for conv nets

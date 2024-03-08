@@ -349,8 +349,8 @@ def save_to_hdf5(sampled_video_frames,
         image = obs.create_group('images')
         for cam_name in CAMERA_NAMES:
             image.create_dataset(cam_name, (max_timestamp, 480, 640, 3), dtype='uint8', chunks=(1, 480, 640, 3))
-        obs.create_dataset('state', (max_timestamp, 19), dtype='float32')
-        act = root.create_dataset('action', (max_timestamp, 19), dtype='float32')
+        obs.create_dataset('state', (max_timestamp, STATE_DIM), dtype='float32')
+        act = root.create_dataset('action', (max_timestamp, STATE_DIM), dtype='float32')
 
         for name, array in data_dict.items():
             print(name)
