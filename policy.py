@@ -71,12 +71,27 @@ class ACTPolicy(nn.Module):
     def configure_optimizers(self):
         return self.optimizer
     
-    def load_can_loadd(self, ckpt_path):
+    def load_can_load(self, ckpt_path):
         # TODO: copy from yap-train
         # 其实如果是网络结构全变了，strict=False应该就够用了
-        # yap train 是只改最后的fc层，所以可以通过idx进一步填充
-        # 这里大概是chunk size和action dim会变？
-        raise NotImplementedError
+        # 只能对同名不同shape的参数做处理
+        try:
+            self.load_state_dict(torch.load(ckpt_path), strict=True)
+            print(f'Loaded {ckpt_path}')
+        except:
+            state_dict = torch.load(ckpt_path)
+            model_dict = self.state_dict()
+            for k, v in state_dict.items():
+                if k in model_dict and v.shape == model_dict[k].shape:
+                    model_dict[k] = v
+                elif k in model_dict and v.shape != model_dict[k].shape:
+                    print(f'Shape mismatch {k} {v.shape} {model_dict[k].shape}')
+                else:
+                    print(f'Key not found {k}')
+            self.load_state_dict(model_dict, strict=False)
+
+            print(f'Loaded {ckpt_path}')
+        
         
 
 # IN Yaa, useless
