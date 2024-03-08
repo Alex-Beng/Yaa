@@ -283,6 +283,9 @@ def test_on_data(config):
                 dx, dy = int(dx), int(dy)
                 dx_gt, dy_gt = int(dx_gt), int(dy_gt)
                 curr_image = cv2.arrowedLine(curr_image, (640, 240), (640+dx, 240+dy), (0, 0, 255), 2)
+                # 在旁边绘制另一个 predicted dx dy
+                curr_image = cv2.arrowedLine(curr_image, (320, 240), (320+dx, 240+dy), (0, 0, 255), 2)
+
                 curr_image = cv2.arrowedLine(curr_image, (640, 240), (640+dx_gt, 240+dy_gt), (0, 255, 0), 2)
                 if onscreen_render:
                     cv2.imshow('image', curr_image)
