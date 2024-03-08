@@ -75,6 +75,8 @@ class DETRVAE(nn.Module):
         if backbones is not None:
             self.input_proj = nn.Conv2d(backbones[0].num_channels, hidden_dim, kernel_size=1)
             self.backbones = nn.ModuleList(backbones)
+            # TODO: make it configurable
+            self.backbones.requires_grad_(False)
             self.input_proj_robot_state = nn.Linear(19, hidden_dim)
             # TODO: rm hardcode
         else:
