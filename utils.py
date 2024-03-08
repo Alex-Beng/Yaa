@@ -101,6 +101,8 @@ class EpisodicDataset(torch.utils.data.Dataset):
         
         obs_state_data_norm = (obs_state_data - self.norm_stats['obs_state_mean']) / self.norm_stats['obs_state_std']
         obs_state_data[:-3] = obs_state_data_norm[:-3]
+        # 可能会出现显存泄露？
+        del action_data_norm, obs_state_data_norm
 
         return image_data, obs_state_data, action_data, is_pad
 
