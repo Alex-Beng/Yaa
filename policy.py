@@ -49,10 +49,10 @@ class ACTPolicy(nn.Module):
             mouse_l1 = (mouse_l1 * ~is_pad.unsqueeze(-1)).mean()
             keyboard_ce = (keyboard_ce * ~is_pad.unsqueeze(-1)).mean()
             print(f'Mouse L1 {mouse_l1}, Keyboard CE {keyboard_ce}')
-            keyboard_ce *= 1.2
-            mouse_l1 *= 0.8
+            # keyboard_ce *= 1.2
+            # mouse_l1 *= 0.8
             l1 = (mouse_l1 + keyboard_ce) / 2
-            l1 = keyboard_ce
+            # l1 = keyboard_ce
             
             if False:
                 all_l1 = F.l1_loss(actions, a_hat, reduction='none')
