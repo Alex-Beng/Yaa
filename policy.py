@@ -41,7 +41,7 @@ class ACTPolicy(nn.Module):
             keyboard_a_hat = a_hat[:, :, :-3]
 
             # mouse 使用 l1 loss，keyboard 使用 binary cross entropy
-            mouse_l1 = F.l1_loss(mouse_actions, mouse_a_hat, reduction='none')
+            mouse_l1 = F.l1_loss(mouse_a_hat, mouse_actions, reduction='none')
             keyboard_ce = F.binary_cross_entropy_with_logits(keyboard_a_hat, keyboard_actions, reduction='none')
             # keyboard_ce = F.l1_loss(keyboard_a_hat, keyboard_actions, reduction='none')
             
