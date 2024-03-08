@@ -43,6 +43,11 @@ class ACTPolicy(nn.Module):
             # mouse 使用 l1 loss，keyboard 使用 binary cross entropy
             mouse_l1 = F.l1_loss(mouse_a_hat, mouse_actions, reduction='none')
             keyboard_ce = F.binary_cross_entropy_with_logits(keyboard_a_hat, keyboard_actions, reduction='none')
+            # 为什么action的范围不在0-1之间？
+            # 因为傻逼norm不是0-1，而是 N(0, 1) 
+            min_action = keyboard_actions.min()
+            max_action = keyboard_actions.max()
+            # print(f'Min action {min_action}, Max action {max_action}')
             # keyboard_ce = F.l1_loss(keyboard_a_hat, keyboard_actions, reduction='none')
             
             # mask掉pad的部分
