@@ -38,7 +38,9 @@ class EpisodicDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         sample_full_episode = not self.samp_traj
 
-        episode_id = self.episode_ids[index]
+        # TODO: make this configurable
+        # episode_id = self.episode_ids[index]
+        episode_id = np.random.choice(self.episode_ids)
         dataset_path = os.path.join(self.dataset_dir, f'{episode_id}.hdf5')
         with h5py.File(dataset_path, 'r') as root:
             # is_sim = root.attrs['sim']
