@@ -59,7 +59,8 @@ TODOs more important now:
 - [ ] 测试CNNMLP模型
 - [ ] backbone 不给梯度的选项
 - [x] 键盘和鼠标动作使用不同loss，需要引入权重超参？
-- [ ] click动作实际上比想象中常见，处理方法
+- [ ] click动作实际上比想象中常见，处理方法？
+- [ ] fix 推理的 action 处理
 
 Thank to @[XizoB](https://github.com/XizoB) for the first few TODOs.
 
