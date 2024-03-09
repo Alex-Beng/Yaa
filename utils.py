@@ -2,6 +2,7 @@
 
 import os
 import pickle
+from random import randint
 
 import numpy as np
 import torch
@@ -9,6 +10,9 @@ import h5py
 from torch.utils.data import TensorDataset, DataLoader
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pad_sequence
+
+from constants import SN
+# 增大E键按下后的episode出现的概率
 
 import IPython
 e = IPython.embed
@@ -45,11 +49,23 @@ class EpisodicDataset(torch.utils.data.Dataset):
         with h5py.File(dataset_path, 'r') as root:
             # is_sim = root.attrs['sim']
             original_action_shape = root['/action'].shape # batch_size/episode_len, action_dim
+            # 从 /action 寻找第一个 E 不为 0 的位置
+            e_begin = 0
+            for i in range(original_action_shape[0]):
+                if root['/action'][i, SN['E']] != 0:
+                    e_begin = i
+                    break
+
             episode_len = original_action_shape[0]
             if sample_full_episode:
                 start_ts = 0
             else:
-                start_ts = np.random.choice(episode_len)
+                # 一半概率直接短路到E
+                # 一半概率随机选择
+                if np.random.rand() > 0.5:
+                    start_ts = randint(e_begin, episode_len - 1)
+                else:
+                    start_ts = np.random.choice(episode_len)
             # get observation at start_ts only
             # Yaa changed status
             # qpos = root['/observations/qpos'][start_ts]
