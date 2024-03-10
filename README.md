@@ -57,6 +57,7 @@ TODOs more important now:
 - [ ] 真实环境中的量化+onnx部署
 - [ ] 测试去掉CVAE encoder模型
 - [ ] 测试CNNMLP模型
+- [ ] 去掉ImageNet的norm？
 - [ ] backbone 不给梯度的选项
 - [x] 键盘和鼠标动作使用不同loss，需要引入权重超参？
 - [ ] click动作实际上比想象中常见，处理方法？
