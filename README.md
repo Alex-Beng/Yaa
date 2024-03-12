@@ -62,6 +62,9 @@ TODOs more important now:
 - [x] 键盘和鼠标动作使用不同loss，需要引入权重超参？
 - [ ] click动作实际上比想象中常见，处理方法？
 - [ ] fix 推理的 action 处理
+- [ ] 单相机输入 tries（xjb弄了下，应该是norm的问题
+- [ ] 鼠标变为离散动作 tries，类似VPT
+
 
 Thank to @[XizoB](https://github.com/XizoB) for the first few TODOs.
 
