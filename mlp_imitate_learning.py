@@ -1,4 +1,4 @@
-# 使用act网络进行模仿学习
+# 使用mlp网络进行模仿学习
 import os
 import pickle
 import argparse
