@@ -64,6 +64,7 @@ TODOs more important now:
 - [ ] fix 推理的 action 处理
 - [ ] 单相机输入 tries（xjb弄了下，应该是norm的问题
 - [ ] 鼠标变为离散动作 tries，类似VPT
+  - [ ] L1 loss + BCE loss -> 负对数似然，同时也能添加loss的权重
 
 
 Thank to @[XizoB](https://github.com/XizoB) for the first few TODOs.
