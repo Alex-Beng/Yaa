@@ -42,7 +42,7 @@ class EpisodicDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         sample_full_episode = not self.samp_traj
 
-        # TODO: make this configurable
+        # TODO: make this configurable（是否随机选择episode）
         # episode_id = self.episode_ids[index]
         episode_id = np.random.choice(self.episode_ids)
         dataset_path = os.path.join(self.dataset_dir, f'{episode_id}.hdf5')
