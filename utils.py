@@ -62,6 +62,7 @@ class EpisodicDataset(torch.utils.data.Dataset):
             if sample_full_episode:
                 start_ts = 0
             else:
+                # TODO: make other keys more possible too
                 # 一半概率直接短路到E
                 # 一半概率随机选择
                 if np.random.rand() > 0.5:
