@@ -38,6 +38,7 @@ def get_sinusoid_encoding_table(n_position, d_hid):
 
 
 class YaaActionHead(nn.Module):
+    # 现在没啥用，等mouse
     def __init__(self, hidden_dim, state_dim) -> None:
         super().__init__()
         # state 最后三维鼠标的 MRo dx dy 还是用线性层
@@ -73,8 +74,8 @@ class DETRVAE(nn.Module):
         self.transformer = transformer
         self.encoder = encoder
         hidden_dim = transformer.d_model
-        # self.action_head = nn.Linear(hidden_dim, state_dim)
-        self.action_head = YaaActionHead(hidden_dim, state_dim)
+        self.action_head = nn.Linear(hidden_dim, state_dim)
+        # self.action_head = YaaActionHead(hidden_dim, state_dim)
 
         self.is_pad_head = nn.Linear(hidden_dim, 1)
         self.query_embed = nn.Embedding(num_queries, hidden_dim)
