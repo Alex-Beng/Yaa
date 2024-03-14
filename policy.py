@@ -21,9 +21,10 @@ class ACTPolicy(nn.Module):
 
     def __call__(self, qpos, image, actions=None, is_pad=None):
         env_state = None
-        # norm from ImageNet
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
+        # 应该只要norm到-0.5, 0.5就行了 here？
+        # 因为游戏的图像分布不来自真实世界，imagenet的mean和std不适用
+        normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],
+                                         std=[0.5, 0.5, 0.5])
         image = normalize(image)
         if actions is not None: # training time
             actions = actions[:, :self.model.num_queries]
@@ -105,8 +106,8 @@ class CNNMLPPolicy(nn.Module):
 
     def __call__(self, qpos, image, actions=None, is_pad=None):
         env_state = None # TODO
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
+        normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5],
+                                        std=[0.5, 0.5, 0.5])
         image = normalize(image)
         if actions is not None: # training time
             actions = actions[:, 0]
