@@ -28,6 +28,7 @@ def main(args):
     batch_size_train = args['batch_size']
     batch_size_val = args['batch_size']
     num_epochs = args['num_epochs']
+    chunk_size = args['chunk_size']
 
     # get task parameters
     task_config = TASK_CONFIG[task_name]
@@ -47,7 +48,7 @@ def main(args):
     dec_layers = 7
     nheads = 8
     policy_config = {'lr': args['lr'],
-                    'num_queries': args['chunk_size'],
+                    'num_queries': chunk_size,
                     'kl_weight': args['kl_weight'],
                     'hidden_dim': args['hidden_dim'],
                     'dim_feedforward': args['dim_feedforward'],

@@ -28,6 +28,7 @@ def main(args):
     batch_size_train = args['batch_size']
     batch_size_val = args['batch_size']
     num_epochs = args['num_epochs']
+    chunk_size = args['chunk_size']
 
     # get task parameters
     task_config = TASK_CONFIG[task_name]
@@ -47,7 +48,7 @@ def main(args):
     dec_layers = 7
     nheads = 8
     policy_config = {'lr': args['lr'],
-                    'num_queries': args['chunk_size'],
+                    'num_queries': chunk_size,
                     'kl_weight': args['kl_weight'],
                     'hidden_dim': args['hidden_dim'],
                     'dim_feedforward': args['dim_feedforward'],
@@ -183,7 +184,22 @@ def train_bc(train_dataloader, val_dataloader, config):
 
 def forward_pass(data, policy):
     image_data, qpos_data, action_data, is_pad = data
-    # 输出各个data的dtype和shape
+    # 输出各data的取值范围
+    # print(image_data.max(), image_data.min())
+    # print(qpos_data.max(), qpos_data.min())
+    # print(action_data.max(), action_data.min())
+    # print(is_pad.max(), is_pad.min())
+    # # max 的 idx
+    # idx = qpos_data.argmax()
+    # print(qpos_data.argmax())
+    # # exit()
+
+    # print(qpos_data)
+    # print(action_data)
+    # print(is_pad)
+    
+
+    # # 输出各个data的dtype和shape
     # print(image_data.dtype, qpos_data.dtype, action_data.dtype, is_pad.dtype)
     # print(image_data.shape, qpos_data.shape, action_data.shape, is_pad.shape)
     # exit()
