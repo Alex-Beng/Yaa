@@ -128,6 +128,7 @@ class CNNMLPPolicy(nn.Module):
         if actions is not None: # training time
             actions = actions[:, 0]
             a_hat = self.model(qpos, image, env_state, actions)
+            # TODO: fix loss computation
             mse = F.mse_loss(actions, a_hat)
             loss_dict = dict()
             loss_dict['mse'] = mse
