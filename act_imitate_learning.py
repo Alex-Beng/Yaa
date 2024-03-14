@@ -107,10 +107,11 @@ def train_bc(train_dataloader, val_dataloader, config):
     # TODO: make pretrained ckpt configurable
     colab_path = r"c:\Users\Alex Beng\Downloads\lateast.ckpt"
     colab_path = r'/media/alex/Windows/Users/Alex Beng/Downloads/lateast.ckpt'
+    colab_path = r'./models/models_smaller/policy_epoch_100_seed_0.ckpt'
     # colab_path = r'./models/policy_epoch_1700_seed_0.ckpt'
     # colab_path = r'./models/policy_last.ckpt'
     # policy.load_state_dict(torch.load(os.path.join(ckpt_dir, 'policy_epoch_0_seed_0.ckpt'), device), strict=False)
-    policy.load_can_load(colab_path)
+    # policy.load_can_load(colab_path)
     policy = policy.to(device)
     optimizer = policy.configure_optimizers()
 
