@@ -83,7 +83,7 @@ class EpisodicDataset(torch.utils.data.Dataset):
         
         padded_action = np.zeros((self.chunk_size, action_dim), dtype=np.float32)
         padded_action[:action_len] = action
-        is_pad = np.zeros(episode_len)
+        is_pad = np.zeros(self.chunk_size, dtype=np.bool)
         is_pad[action_len:] = 1
 
         # new axis for different cameras
@@ -233,11 +233,11 @@ def load_data(dataset_dir, num_episodes, camera_names, chunk_size, batch_size_tr
     val_dataset = EpisodicDataset(val_indices, dataset_dir, camera_names, norm_stats, chunk_size, True)
     # print(f'batch size train: {batch_size_train}, batch size val: {batch_size_val}')
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size_train, 
-                                  shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,
-                                  collate_fn=MyCollate(max_episode_len).collate_fn)
+                                  shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,)
+                                #   collate_fn=MyCollate(max_episode_len).collate_fn)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size_val,
-                                shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,
-                                collate_fn=MyCollate(max_episode_len).collate_fn)
+                                shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,)
+                                # collate_fn=MyCollate(max_episode_len).collate_fn)
 
     return train_dataloader, val_dataloader, norm_stats
 
