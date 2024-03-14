@@ -50,6 +50,8 @@ class EpisodicDataset(torch.utils.data.Dataset):
             # is_sim = root.attrs['sim']
             original_action_shape = root['/action'].shape # episode_len, action_dim
             # 从 /action 寻找第一个 E 不为 0 的位置
+            
+            # TODO: add more keys of interest, make it a function?
             e_begin = 0
             for i in range(original_action_shape[0]):
                 if root['/action'][i, SN['E']] != 0:
