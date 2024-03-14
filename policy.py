@@ -46,8 +46,8 @@ class ACTPolicy(nn.Module):
             keyboard_ce = F.binary_cross_entropy_with_logits(keyboard_a_hat, keyboard_actions, reduction='none')
             # 为什么action的范围不在0-1之间？
             # 因为傻逼norm不是0-1，而是 N(0, 1) 
-            min_action = keyboard_actions.min()
-            max_action = keyboard_actions.max()
+            # min_action = keyboard_actions.min()
+            # max_action = keyboard_actions.max()
             # print(f'Min action {min_action}, Max action {max_action}')
             # keyboard_ce = F.l1_loss(keyboard_a_hat, keyboard_actions, reduction='none')
             
