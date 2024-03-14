@@ -209,9 +209,12 @@ def test_on_data(config):
                 else:
                     # 就是每隔 chunk size推理一次
                     raw_action = all_actions[:, t % query_frequecy]
+                # 保留sigmoid之前的 mro, dx, dy
                 
                 # 需要后处理 action
-                raw_action = raw_action.squeeze(0).cpu().numpy()
+                # sigmoid 一下
+                # raw_action = torch.sigmoid(raw_action)
+                # raw_action = raw_action.squeeze(0).cpu().numpy()
                 print(np.round(raw_action, 2))
                 # 恢复到采集时候的分布
                 action = post_process(raw_action)
