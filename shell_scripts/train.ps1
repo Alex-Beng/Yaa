@@ -2,7 +2,7 @@
 python mlp_imitate_learning.py `
 --task_name nazuchi_beach_friendship `
 --ckpt_dir ./models/models_mlp `
---kl_weight 100 --chunk_size 20 --hidden_dim 512 --batch_size 16 --dim_feedforward 2048 `
+--kl_weight 100 --chunk_size 20 --hidden_dim 512 --batch_size 32 --dim_feedforward 2048 `
 --num_epochs 2000  --lr 1e-4 `
 --seed 0
 
