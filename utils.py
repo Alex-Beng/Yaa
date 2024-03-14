@@ -3,6 +3,7 @@
 import os
 import pickle
 from random import randint
+from copy import deepcopy
 
 import numpy as np
 import torch
@@ -18,7 +19,7 @@ import IPython
 e = IPython.embed
 
 class EpisodicDataset(torch.utils.data.Dataset):
-    def __init__(self, episode_ids, dataset_dir, camera_names, norm_stats, samp_traj=True):
+    def __init__(self, episode_ids, dataset_dir, camera_names, norm_stats, chunk_size,  samp_traj=True):
         super(EpisodicDataset).__init__()
         self.episode_ids = episode_ids
         self.dataset_dir = dataset_dir
@@ -28,13 +29,9 @@ class EpisodicDataset(torch.utils.data.Dataset):
         # test需要的仅仅是 images -> actions
         self.samp_traj = samp_traj
         # 这里的norm是在整个task的数据集上计算的
-        # 需要保留归一norm以在推理时使用？
-        # 嗷，保存了，在ckpt_dir/dataset_stats.pkl
+        # 在ckpt_dir/dataset_stats.pkl
         self.norm_stats = norm_stats
-        # IN Yaa, there is not "sim", only record.
-        # 所以无需这个变量
-        # self.is_sim = None
-        # self.__getitem__(0) # initialize self.is_sim
+        self.chunk_size = chunk_size
 
     def __len__(self):
         return len(self.episode_ids)
@@ -78,9 +75,13 @@ class EpisodicDataset(torch.utils.data.Dataset):
             
             # Hack trick, 实际机器人/窗口响应需要时间
             # TODO: make -1 configurable
-            action = root['/action'][max(0, start_ts - 1):] # 先试试-1
-            action_len = episode_len - max(0, start_ts - 1)
-        padded_action = np.zeros(original_action_shape, dtype=np.float32)
+            # 只要chunk size内的action
+            s_idx = max(0, start_ts - 1)
+            e_idx = min(start_ts + self.chunk_size - 1, episode_len) # need -1 too
+            action = root['/action'][s_idx:e_idx]
+            action_len = e_idx - s_idx
+        
+        padded_action = np.zeros((self.chunk_size, action_dim), dtype=np.float32)
         padded_action[:action_len] = action
         is_pad = np.zeros(episode_len)
         is_pad[action_len:] = 1
@@ -213,7 +214,7 @@ def get_norm_stats(dataset_dir, num_episodes):
     return stats, max_episode_len
 
 
-def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_size_val):
+def load_data(dataset_dir, num_episodes, camera_names, chunk_size, batch_size_train, batch_size_val):
     print(f'\nData from: {dataset_dir}\n')
     # obtain train test split
     # TODO: make this ratio configurable
@@ -228,8 +229,8 @@ def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_s
     norm_stats, max_episode_len = get_norm_stats(dataset_dir, num_episodes)
 
     # construct dataset and dataloader
-    train_dataset = EpisodicDataset(train_indices, dataset_dir, camera_names, norm_stats, True)
-    val_dataset = EpisodicDataset(val_indices, dataset_dir, camera_names, norm_stats, True)
+    train_dataset = EpisodicDataset(train_indices, dataset_dir, camera_names, norm_stats, chunk_size, True)
+    val_dataset = EpisodicDataset(val_indices, dataset_dir, camera_names, norm_stats, chunk_size, True)
     # print(f'batch size train: {batch_size_train}, batch size val: {batch_size_val}')
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size_train, 
                                   shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1,

@@ -75,7 +75,7 @@ def main(args):
         # 'real_robot': not is_sim
     }
 
-    train_dataloader, val_dataloader, stats = load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_size_val)
+    train_dataloader, val_dataloader, stats = load_data(dataset_dir, num_episodes, camera_names, chunk_size, batch_size_train, batch_size_val)
 
     # save dataset stats
     if not os.path.isdir(ckpt_dir):
