@@ -14,6 +14,7 @@ class ACTPolicy(nn.Module):
         model, optimizer = build_ACT_model_and_optimizer(args_override)
         self.model = model # CVAE decoder
         self.optimizer = optimizer
+        self.last_l2 = None
         
         # TODO: rm this hack
         self.kl_weight = args_override['kl_weight'] if 'kl_weight' in args_override else 10
@@ -56,6 +57,15 @@ class ACTPolicy(nn.Module):
             # mask掉pad的部分
             mouse_l1 = (mouse_l1 * ~is_pad.unsqueeze(-1)).mean()
             keyboard_ce = (keyboard_ce * ~is_pad.unsqueeze(-1)).mean()
+
+            # if self.last_l2 is None:
+            #     self.last_l2 = mouse_l1
+            # else:
+            #     if mouse_l1 > self.last_l2 * 1.5:
+            #         print(f'clip mouse l1 {mouse_l1} to {self.last_l2}')
+            #         mouse_l1 = self.last_l2 * 0.8
+
+
             # print(f'Mouse L1 {mouse_l1}, Keyboard CE {keyboard_ce}')
             # keyboard_ce *= 1.2
             # mouse_l1 *= 0.8
