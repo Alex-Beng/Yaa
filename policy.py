@@ -27,6 +27,8 @@ class ACTPolicy(nn.Module):
                                          std=[0.5, 0.5, 0.5])
         image = normalize(image)
         if actions is not None: # training time
+            # nmd 在算loss的时候才使用chunk_size，
+            # 显存是真不考虑了是吧
             actions = actions[:, :self.model.num_queries]
             is_pad = is_pad[:, :self.model.num_queries]
 
