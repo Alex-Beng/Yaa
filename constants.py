@@ -58,7 +58,7 @@ SC_sc2idx = dict(zip(SC_idx2sc, range(STATE_DIM)))
 
 CAMERA_NAMES = [
     'rgb',
-    'alpha'
+    # 'alpha'
 ]
 
 
