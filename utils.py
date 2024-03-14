@@ -107,6 +107,7 @@ class EpisodicDataset(torch.utils.data.Dataset):
         image_data = image_data / 255.0
 
         # 对于键盘的 state 和 action，不需要进行 N(0, 1) 的归一化，反而会导致BCELoss的值变为negetive
+        # TODO: only save and norm the mouse action which needs normalization
         action_data_norm = (action_data - self.norm_stats["action_mean"]) / self.norm_stats["action_std"]
         action_data[:, -3:] = action_data_norm[:, -3:]
         
