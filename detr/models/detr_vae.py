@@ -285,7 +285,7 @@ def build(args):
     return model
 
 def build_cnnmlp(args):
-    state_dim = 14 # TODO hardcode
+    state_dim = STATE_DIM # TODO hardcode
 
     # From state
     # backbone = None # from state for now, no need for conv nets
