@@ -15,7 +15,9 @@ Yet Another Artificial GI-player
 
 - [x] 定义输入和输出
     - [x] in: 图像+感知状态
-    - [x] out: 动作
+    - [ ] out: 动作
+      - [x] factored action space
+      - [ ] Joint Hierarchical Action Space
 - [ ] 图像
   - [ ] ~~主画面+EQ+小地图~~
   - [x] 主画面+alpha通道
