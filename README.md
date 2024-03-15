@@ -13,7 +13,7 @@ Yet Another Artificial GI-player
 # TODOs
 
 
-- [x] 定义输入和输出
+- [x] 定义输入和输出，observation space and action space actually
     - [x] in: 图像+感知状态
     - [ ] out: 动作
       - [x] factored action space
