@@ -74,10 +74,12 @@ class EpisodicDataset(torch.utils.data.Dataset):
                 image_dict[cam_name] = root[f'/obs/images/{cam_name}'][start_ts]
             
             # Hack trick, 实际机器人/窗口响应需要时间
-            # TODO: make -1 configurable
+            # TODO: make this configurable
+            ts_offset = -1
+            
             # 只要chunk size内的action
-            s_idx = max(0, start_ts - 1)
-            e_idx = min(start_ts + self.chunk_size - 1, episode_len) # need -1 too
+            s_idx = max(0, start_ts + ts_offset)
+            e_idx = min(start_ts + self.chunk_size + ts_offset, episode_len) # need offset too
             action = root['/action'][s_idx:e_idx]
             action_len = e_idx - s_idx
         
