@@ -22,3 +22,5 @@ datasets/
 detr/detr.egg-info/
 /*.mp4
 /outputs/
+mlp_imitate_learning.py
+mlp_infer.py
