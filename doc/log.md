@@ -205,31 +205,39 @@ python的
 30Hz，遥操作。
 
 # VPT read note
+
+## 模型
+
+IDM+BC。网络结构类似，IDM因为可以是非因果的，添加了“3D”卷积，即在 x y t 上进行卷积
+
 ## 采集频率
-
-
 
 VPT：20Hz 采集和推理。
 
 ## 动作空间 
-
 
 gym里面：discrete and continuous。
 
 binary action：各种按键
 连续：鼠标移动，离散到角度的bins
 
+实际上进行了factored action space和Joint Hierarchical Action Space的实验。
+认为：Joint Hierarchical Action Space可以更好地建模人类操作，
+实际上表现较差，（所以大概这就是放附录的原因）
 
-
-
-# 观测空间
+## 观测空间
 
 VPT 是 渲染640x360原始像素，炒鸡离谱的16 : 9。输入到模型时候，resize -> 128x128，同时渲染一个鼠标指针以模拟人类操作。
 
+~~压缩后遥操作试试。~~
+
+## 删除空操作
 
 
+## 模型容量与loss的关系
 
-压缩后遥操作试试。
+IDM更小的容量带来更好的loss，进行 BC finetune 时相反。
 
-# 删除空操作
+## RL fine tune
 
+没看懂，大概是BC的网络使用不同的loss计算，然后更新网络参数。
