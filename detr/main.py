@@ -9,6 +9,32 @@ from .models import build_ACT_model, build_CNNMLP_model
 import IPython
 e = IPython.embed
 
+def get_defualt_args():
+    # make get_args_parser() reture a dict, which is the default args
+    args = dict()
+    args['lr']                  = 1e-4
+    args['lr_backbone']         = 1e-5
+    args['weight_decay']        = 1e-4
+    args['backbone']            = 'resnet18'
+    args['dilation']            = False
+    args['position_embedding']  = 'sine'
+    args['camera_names']        = ['rgb']
+    args['enc_layers']          = 4
+    args['dec_layers']          = 6
+    args['dim_feedforward']     = 2048
+    args['hidden_dim']          = 256
+    args['dropout']             = 0.1
+    args['nheads']              = 8
+    args['chunk_size']          = 400
+    args['pre_norm']            = False
+    # 挺逆天的，奇奇怪怪的基本都是detr带来的
+    # detr还做了图像分割的实验
+    args['masks']               = False
+
+    
+
+    return args
+
 def get_args_parser():
     parser = argparse.ArgumentParser('Set transformer detector', add_help=False)
     parser.add_argument('--lr', default=1e-4, type=float) # will be overridden
@@ -44,7 +70,7 @@ def get_args_parser():
                         help="Dropout applied in the transformer")
     parser.add_argument('--nheads', default=8, type=int, # will be overridden
                         help="Number of attention heads inside the transformer's attentions")
-    parser.add_argument('--num_queries', default=400, type=int, # will be overridden
+    parser.add_argument('--chunk_size', default=400, type=int, # will be overridden
                         help="Number of query slots")
     parser.add_argument('--pre_norm', action='store_true')
 
@@ -71,11 +97,10 @@ def get_args_parser():
 
 
 def build_ACT_model_and_optimizer(args_override):
-    # 逆天，build的时候再做一次parse
-    # 我说怎么一堆代码里的config
-    parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
-    args = parser.parse_args()
-
+    default_args_dict = get_defualt_args()
+    # make dict to .xxx like args.xxx
+    args = argparse.Namespace(**default_args_dict)
+    
     for k, v in args_override.items():
         setattr(args, k, v)
 
@@ -96,8 +121,8 @@ def build_ACT_model_and_optimizer(args_override):
 
 
 def build_CNNMLP_model_and_optimizer(args_override):
-    parser = argparse.ArgumentParser('DETR training and evaluation script', parents=[get_args_parser()])
-    args = parser.parse_args()
+    default_args_dict = get_defualt_args()
+    args = argparse.Namespace(**default_args_dict)
 
     for k, v in args_override.items():
         setattr(args, k, v)

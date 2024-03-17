@@ -7,18 +7,12 @@ from torch import nn
 from torch.autograd import Variable
 from .backbone import build_backbone
 from .transformer import build_transformer, TransformerEncoder, TransformerEncoderLayer
+from ..util.constants import STATE_DIM
 
 import numpy as np
 
 import IPython
 e = IPython.embed
-
-# TODO: test this
-# TODO: make it configurable
-STATE_DIM = 12
-def set_state_dim(state_dim):
-    global STATE_DIM
-    STATE_DIM = state_dim
 
 def reparametrize(mu, logvar):
     std = logvar.div(2).exp()
@@ -58,18 +52,18 @@ class YaaActionHead(nn.Module):
 
 class DETRVAE(nn.Module):
     """ This is the DETR module that performs object detection """
-    def __init__(self, backbones, transformer, encoder, state_dim, num_queries, camera_names):
+    def __init__(self, backbones, transformer, encoder, state_dim, chunk_size, camera_names):
         """ Initializes the model.
         Parameters:
             backbones: torch module of the backbone to be used. See backbone.py
             transformer: torch module of the transformer architecture. See transformer.py
             state_dim: robot state dimension of the environment
-            num_queries: number of object queries, ie detection slot. This is the maximal number of objects
+            chunk_size: number of object queries, ie detection slot. This is the maximal number of objects
                          DETR can detect in a single image. For COCO, we recommend 100 queries.
             aux_loss: True if auxiliary decoding losses (loss at each decoder layer) are to be used.
         """
         super().__init__()
-        self.num_queries = num_queries
+        self.chunk_size = chunk_size
         self.camera_names = camera_names
         self.transformer = transformer
         self.encoder = encoder
@@ -78,7 +72,7 @@ class DETRVAE(nn.Module):
         # self.action_head = YaaActionHead(hidden_dim, state_dim)
 
         self.is_pad_head = nn.Linear(hidden_dim, 1)
-        self.query_embed = nn.Embedding(num_queries, hidden_dim)
+        self.query_embed = nn.Embedding(chunk_size, hidden_dim)
         if backbones is not None:
             self.input_proj = nn.Conv2d(backbones[0].num_channels, hidden_dim, kernel_size=1)
             self.backbones = nn.ModuleList(backbones)
@@ -99,7 +93,7 @@ class DETRVAE(nn.Module):
         self.encoder_action_proj = nn.Linear(STATE_DIM, hidden_dim) # project action to embedding
         self.encoder_joint_proj = nn.Linear(STATE_DIM, hidden_dim)  # project qpos to embedding
         self.latent_proj = nn.Linear(hidden_dim, self.latent_dim*2) # project hidden state to latent std, var
-        self.register_buffer('pos_table', get_sinusoid_encoding_table(1+1+num_queries, hidden_dim)) # [CLS], qpos, a_seq
+        self.register_buffer('pos_table', get_sinusoid_encoding_table(1+1+chunk_size, hidden_dim)) # [CLS], qpos, a_seq
 
         # decoder extra parameters
         self.latent_out_proj = nn.Linear(self.latent_dim, hidden_dim) # project latent sample to embedding
@@ -177,7 +171,7 @@ class CNNMLP(nn.Module):
             backbones: torch module of the backbone to be used. See backbone.py
             transformer: torch module of the transformer architecture. See transformer.py
             state_dim: robot state dimension of the environment
-            num_queries: number of object queries, ie detection slot. This is the maximal number of objects
+            chunk_size: number of object queries, ie detection slot. This is the maximal number of objects
                          DETR can detect in a single image. For COCO, we recommend 100 queries.
             aux_loss: True if auxiliary decoding losses (loss at each decoder layer) are to be used.
         """
@@ -257,7 +251,7 @@ def build_encoder(args):
 
 
 def build(args):
-    state_dim = STATE_DIM # TODO hardcode
+    state_dim = STATE_DIM
 
     # From state
     # backbone = None # from state for now, no need for conv nets
@@ -275,7 +269,7 @@ def build(args):
         transformer,
         encoder,
         state_dim=state_dim,
-        num_queries=args.num_queries,
+        chunk_size=args.chunk_size,
         camera_names=args.camera_names,
     )
 

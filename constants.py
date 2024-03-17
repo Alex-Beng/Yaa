@@ -3,31 +3,7 @@
 DT = 0.05
 
 # state name -> dim
-
-SN_idx2key = [
-    'W', 
-    'A', 
-    'S', 
-    'D', 
-    'Q', 
-    'E', 
-    # 'X', disable for now
-    ' ', 
-    'LS',
-    # 'T', 
-    # 'Z', 
-    # '1', 
-    # '2', 
-    # '3', 
-    # '4', 
-    'ML', 
-    'MRo', 
-    'Mdx', 
-    'Mdy'
-]
-
-
-STATE_DIM = len(SN_idx2key)
+from detr.util.constants import SN_idx2key, STATE_DIM
 
 # key of interest -> idx
 SN = dict(zip(SN_idx2key, range(STATE_DIM)))

@@ -11,69 +11,75 @@ import matplotlib.pyplot as plt
 
 from utils import set_seed, load_data, compute_dict_mean, detach_dict
 from constants import TASK_CONFIG, STATE_DIM
-from policy import ACTPolicy
+from policy import ACTPolicy, CNNMLPPolicy
 
-# TODO: make device configurable
-device = "cuda" if torch.cuda.is_available() else "cpu"
-# device = 'cpu'
+from config import configs
+
 
 def main(args):
-    # TODO: make seed configurable
-    set_seed(1)
-    # command line parameters
-    ckpt_dir = args['ckpt_dir']
-    # policy_class = args['policy_class']
-    # onscreen_render = args['onscreen_render']
-    task_name = args['task_name']
-    batch_size_train = args['batch_size']
-    batch_size_val = args['batch_size']
-    num_epochs = args['num_epochs']
-    chunk_size = args['chunk_size']
+    # the very first mom to get other parameters
+    config_name = args['config_name']
+    if config_name not in configs:
+        print(f'config_name {config_name} not found in configs')
+        print(f'available configs: {list(configs.keys())}')
+        return
+    config = configs[config_name]
 
-    # get task parameters
-    task_config = TASK_CONFIG[task_name]
-    dataset_dir = task_config['dataset_dir']
-    num_episodes = task_config['num_episodes']
-    episode_len = task_config['episode_len']
-    camera_names = task_config['camera_names']
+    # basic config in config.py
+    set_seed(config['seed'])
+    # maybe be more gentle
+    global device
+    device              = config['device']
+    ckpt_dir            = config['ckpt_dir']
+    policy_class        = config['policy_class']
+    task_name           = config['task_name']
+    batch_size_train    = config['batch_size']
+    batch_size_val      = config['batch_size']
+    num_epochs          = config['num_epochs']
+    chunk_size          = config['chunk_size']
 
+    # task specific config in constants.py
+    task_config         = TASK_CONFIG[task_name]
+    dataset_dir         = task_config['dataset_dir']
+    num_episodes        = task_config['num_episodes']
+    episode_len         = task_config['episode_len']
+    camera_names        = task_config['camera_names']
+    
     # fixed parameters
     state_dim = STATE_DIM
-    # TODO: make backbones configurable
-    lr_backbone = 1e-5
-    backbone = 'resnet18'
 
+    # TODO: make these configurable
     # ACT parameters
     enc_layers = 4
     dec_layers = 7
     nheads = 8
-    policy_config = {'lr': args['lr'],
-                    'num_queries': chunk_size,
-                    'kl_weight': args['kl_weight'],
-                    'hidden_dim': args['hidden_dim'],
-                    'dim_feedforward': args['dim_feedforward'],
-                    'lr_backbone': lr_backbone,
-                    'backbone': backbone,
-                    'enc_layers': enc_layers,
-                    'dec_layers': dec_layers,
-                    'nheads': nheads,
-                    'camera_names': camera_names,
-                    'device': device,
-                    }
+    policy_config = {'lr'               : config['lr'],
+                     'chunk_size'       : config['chunk_size'],
+                     'kl_weight'        : config['kl_weight'],
+                     'hidden_dim'       : config['hidden_dim'],
+                     'dim_feedforward'  : config['dim_feedforward'],
+                     'lr_backbone'      : config['lr_backbone'],
+                     'backbone'         : config['backbone'],
+                     'enc_layers'       : enc_layers,
+                     'dec_layers'       : dec_layers,
+                     'nheads'           : nheads,
+                     'camera_names'     : task_config['camera_names'],
+                     'device'           : device,
+                     }
     config = {
-        'num_epochs': num_epochs,
-        'ckpt_dir': ckpt_dir,
-        'episode_len': episode_len,
-        'state_dim': state_dim,
-        'lr': args['lr'],
-        # 'policy_class': policy_class,
-        # 'onscreen_render': onscreen_render,
-        'policy_config': policy_config,
-        'task_name': task_name,
-        'seed': args['seed'],
-        'temporal_agg': args['temporal_agg'],
-        'camera_names': camera_names,
-        # 'real_robot': not is_sim
+        'pretrained'        : False,
+        'pretrained_ckpt'   : None,
+        'num_epochs'        : num_epochs,
+        'ckpt_dir'          : ckpt_dir,
+        'episode_len'       : episode_len,
+        'state_dim'         : state_dim,
+        'lr'                : config['lr'],
+        'policy_class'      : policy_class,
+        'policy_config'     : policy_config,
+        'task_name'         : task_name,
+        'seed'              : config['seed'],
+        'temporal_agg'      : config['temporal_agg'],
+        'camera_names'      : camera_names,
     }
 
     train_dataloader, val_dataloader, stats = load_data(dataset_dir, num_episodes, camera_names, chunk_size, batch_size_train, batch_size_val)
@@ -84,8 +90,6 @@ def main(args):
     stats_path = os.path.join(ckpt_dir, f'dataset_stats.pkl')
     with open(stats_path, 'wb') as f:
         # 保存这一数据集的mean and std for 推理
-        # TODO: 直接和checkpoint存一起
-        # TODO: 删掉stats里面的sample数据
         pickle.dump(stats, f)
     
     best_ckpt_info = train_bc(train_dataloader, val_dataloader, config)
@@ -97,22 +101,20 @@ def main(args):
     print(f'Best ckpt, val loss {min_val_loss:.6f} @ epoch{best_epoch}')
 
 def train_bc(train_dataloader, val_dataloader, config):
-    num_epochs = config['num_epochs']
-    ckpt_dir = config['ckpt_dir']
-    seed = config['seed']
-    policy_config = config['policy_config']
+    num_epochs      = config['num_epochs']
+    ckpt_dir        = config['ckpt_dir']
+    seed            = config['seed']
+    policy_config   = config['policy_config']
 
     set_seed(seed)
 
-    policy = ACTPolicy(policy_config)
-    # TODO: make pretrained ckpt configurable
-    colab_path = r"c:\Users\Alex Beng\Downloads\lateast.ckpt"
-    colab_path = r'/media/alex/Windows/Users/Alex Beng/Downloads/lateast.ckpt'
-    colab_path = r'./models/models_smaller/policy_epoch_100_seed_0.ckpt'
-    # colab_path = r'./models/policy_epoch_1700_seed_0.ckpt'
-    # colab_path = r'./models/policy_last.ckpt'
-    # policy.load_state_dict(torch.load(os.path.join(ckpt_dir, 'policy_epoch_0_seed_0.ckpt'), device), strict=False)
-    # policy.load_can_load(colab_path)
+    if config['policy_class'] == 'mlp':
+        policy = CNNMLPPolicy(policy_config)
+    elif config['policy_class'] == 'act':
+        policy = ACTPolicy(policy_config)
+    
+    if config['pretrained']:
+        policy.load_can_load(config['pretrained_ckpt'])
     policy = policy.to(device)
     optimizer = policy.configure_optimizers()
 
@@ -209,21 +211,9 @@ def plot_history(train_history, validation_history, num_epochs, ckpt_dir, seed):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--eval', action='store_true')
-    # parser.add_argument('--onscreen_render', action='store_true')
-    parser.add_argument('--ckpt_dir', action='store', type=str, help='ckpt_dir', required=True)
-    # parser.add_argument('--policy_class', action='store', type=str, help='policy_class, capitalize', required=True)
-    parser.add_argument('--task_name', action='store', type=str, help='task_name', required=True)
-    parser.add_argument('--batch_size', action='store', type=int, help='batch_size', required=True)
-    parser.add_argument('--seed', action='store', type=int, help='seed', required=True)
-    parser.add_argument('--num_epochs', action='store', type=int, help='num_epochs', required=True)
-    parser.add_argument('--lr', action='store', type=float, help='lr', required=True)
-
-    # for ACT
-    parser.add_argument('--kl_weight', action='store', type=int, help='KL Weight', required=False)
-    parser.add_argument('--chunk_size', action='store', type=int, help='chunk_size', required=False)
-    parser.add_argument('--hidden_dim', action='store', type=int, help='hidden_dim', required=False)
-    parser.add_argument('--dim_feedforward', action='store', type=int, help='dim_feedforward', required=False)
-    parser.add_argument('--temporal_agg', action='store_true')
-    
+    parser.add_argument('--config_name', 
+                        action='store', type=str, 
+                        help=f'which config to be used', 
+                        choices=configs.keys(),
+                        required=True)
     main(vars(parser.parse_args()))
