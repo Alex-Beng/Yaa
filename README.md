@@ -12,6 +12,12 @@ Yet Another Artificial GI-player
 
 # TODOs
 
+- [ ] Behavior Cloning
+  - [ ] ACT
+  - [ ] Deffusion Policy
+  - [ ] VPT ?
+- [ ] RL finetune
+
 
 - [x] 定义输入和输出，observation space and action space actually
     - [x] in: 图像+感知状态
