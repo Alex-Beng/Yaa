@@ -19,10 +19,6 @@ from config import configs
 def main(args):
     # the very first mom to get other parameters
     config_name = args['config_name']
-    if config_name not in configs:
-        print(f'config_name {config_name} not found in configs')
-        print(f'available configs: {list(configs.keys())}')
-        return
     config = configs[config_name]
 
     # basic config in config.py
@@ -211,7 +207,7 @@ def plot_history(train_history, validation_history, num_epochs, ckpt_dir, seed):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_name', 
+    parser.add_argument('--config_name', '-c',
                         action='store', type=str, 
                         help=f'which config to be used', 
                         choices=configs.keys(),
