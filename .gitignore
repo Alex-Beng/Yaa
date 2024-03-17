@@ -24,3 +24,4 @@ detr/detr.egg-info/
 /outputs/
 mlp_imitate_learning.py
 mlp_infer.py
+/video/
