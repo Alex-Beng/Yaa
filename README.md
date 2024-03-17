@@ -8,7 +8,7 @@ Yet Another Artificial GI-player
 
 # 介绍
 
-基于~~目前大热的Diffusion Policy~~、ACT等~~强化学习~~/模仿学习算法，实现原神的基于动作生成的AI。
+基于强化学习/模仿学习算法，实现原神的基于动作生成的AI。
 
 # TODOs
 
@@ -17,6 +17,7 @@ Yet Another Artificial GI-player
   - [ ] Deffusion Policy
   - [ ] VPT ?
 - [ ] RL finetune
+  - [ ] 似乎只能AC类，所以需要critic网络，如何定义
 
 
 - [x] 定义输入和输出，observation space and action space actually
