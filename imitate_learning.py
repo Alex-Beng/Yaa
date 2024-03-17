@@ -74,7 +74,6 @@ def main(args):
         'policy_config'     : policy_config,
         'task_name'         : task_name,
         'seed'              : config['seed'],
-        'temporal_agg'      : config['temporal_agg'],
         'camera_names'      : camera_names,
     }
 
