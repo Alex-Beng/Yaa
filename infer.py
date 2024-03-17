@@ -91,7 +91,11 @@ def main(args):
         'camera_names'      : camera_names,
         'real_GI'           : real_GI,
         'save_video'        : save_video,
+        'video_dir'         : config['video_dir'],
     }
+
+    if save_video and not os.path.exists(config['video_dir']):
+        os.makedirs(config['video_dir'])
 
     # test !
     if not real_GI:
@@ -175,8 +179,9 @@ def test_on_data(config):
         state_list = []
         target_state_list = []
         if save_video:
-            video_path = f'./{task_name}_{episode_id}.mp4'
-            out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'XVID'), 10, (640*2, 480))
+            video_path = os.path.join(config['video_dir'], f'{task_name}_{ckpt_name}_{episode_id}.mp4')
+            # TODO: fix the hardcode frame size
+            out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 10, (640, 480))
 
         with torch.inference_mode():
             for t in range(max_timestamps):
