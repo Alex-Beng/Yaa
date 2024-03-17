@@ -17,8 +17,9 @@ from einops import rearrange
 
 from utils import set_seed, load_data_test, compute_dict_mean, detach_dict
 from constants import TASK_CONFIG, STATE_DIM, SN_idx2key
-from policy import ACTPolicy
+from policy import ACTPolicy, CNNMLPPolicy
 from gi_env import GIDataEnv, GIRealEnv
+from config import infer_configs
 
 import IPython
 e = IPython.embed
@@ -28,60 +29,68 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # device = "cpu"
 
 def main(args):
-    # TODO: make seed configurable
-    set_seed(1)
-    # command line parameters
-    real_GI = args['real_O']
-    save_video = args['save_video']
-    ckpt_dir = args['ckpt_dir']
-    onscreen_render = args['onscreen_render']
-    task_name = args['task_name']
+    # the very first mom to get other parameters
+    config_name = args['config_name']
+    config = infer_configs[config_name]
+    
+    # basic config in config.py
+    set_seed(config['seed'])
+    global device   
+    device              = config['device']
+    ckpt_dir            = config['ckpt_dir']
+    policy_class        = config['policy_class']
+    task_name           = config['task_name']
+    chunk_size          = config['chunk_size']
+    backbone            = config['backbone']
+    
+    ckpt_name           = args['ckpt_name']
+    real_GI             = args['real_O']
+    save_video          = args['save_video']
+    onscreen_render     = args['onscreen_render']
+    temporal_agg        = args['temporal_agg']
 
     # get task parameters
-    task_config = TASK_CONFIG[task_name]
-    dataset_dir = task_config['dataset_dir']
-    num_episodes = task_config['num_episodes']
-    episode_len = task_config['episode_len'] # TODO: rm this config
-    camera_names = task_config['camera_names']
+    task_config         = TASK_CONFIG[task_name]
+    dataset_dir         = task_config['dataset_dir']
+    num_episodes        = task_config['num_episodes']
+    episode_len         = task_config['episode_len'] # TODO: rm this config
+    camera_names        = task_config['camera_names']
 
     # fixed parameters
     state_dim = STATE_DIM
-    # TODO: make backbones configurable
-    lr_backbone = 1e-5
-    backbone = 'resnet18'
 
+    # TODO: make these configurable
     # ACT parameters
     enc_layers = 4
     dec_layers = 7
     nheads = 8
     policy_config = {
-                    'num_queries': args['chunk_size'],
-                    'hidden_dim': args['hidden_dim'],
-                    'dim_feedforward': args['dim_feedforward'],
-                    'backbone': backbone,
-                    'enc_layers': enc_layers,
-                    'dec_layers': dec_layers,
-                    'nheads': nheads,
-                    'camera_names': camera_names,
-                    'device': device,
+                    'chunk_size'        : chunk_size,
+                    'hidden_dim'        : config['hidden_dim'],
+                    'dim_feedforward'   : config['dim_feedforward'],
+                    'backbone'          : backbone,
+                    'enc_layers'        : enc_layers,
+                    'dec_layers'        : dec_layers,
+                    'nheads'            : nheads,
+                    'camera_names'      : camera_names,
+                    'device'            : device,
                     }
     config = {
-        'ckpt_dir': ckpt_dir,
-        'ckpt_name': args['ckpt_name'],
-        'num_episodes': num_episodes,
-        'episode_len': episode_len,
-        'state_dim': state_dim,
-        # 'lr': args['lr'],
-        # 'policy_class': policy_class,
-        'onscreen_render': onscreen_render,
-        'policy_config': policy_config,    # TODO: code the envs for testing
+        'ckpt_dir'          : ckpt_dir,
+        'ckpt_name'         : ckpt_name,
+        'num_episodes'      : num_episodes,
+        'episode_len'       : episode_len,
+        'state_dim'         : state_dim,
+        'policy_class'      : policy_class,
+        'onscreen_render'   : onscreen_render,
+        'policy_config'     : policy_config,    
 
-        'task_name': task_name,
-        'seed': args['seed'],
-        'temporal_agg': args['temporal_agg'],
-        'camera_names': camera_names,
-        'real_GI': real_GI,
-        'save_video': save_video,
+        'task_name'         : task_name,
+        'seed'              : config['seed'],
+        'temporal_agg'      : chunk_size,
+        'camera_names'      : camera_names,
+        'real_GI'           : real_GI,
+        'save_video'        : save_video,
     }
 
     # test !
@@ -93,21 +102,25 @@ def main(args):
 
 def test_on_data(config):
     set_seed(config['seed'])
-    ckpt_dir = config['ckpt_dir']
-    ckpt_name = config['ckpt_name']
-    state_dim = config['state_dim']
+    ckpt_dir        = config['ckpt_dir']
+    ckpt_name       = config['ckpt_name']
+    state_dim       = config['state_dim']
     onscreen_render = config['onscreen_render']
-    policy_config = config['policy_config']
-    camera_names = config['camera_names']
-    task_name = config['task_name']
-    max_timestamps = config['episode_len']
-    max_episodes = config['num_episodes']
-    temporal_agg = config['temporal_agg']
-    save_video = config['save_video']
+    policy_config   = config['policy_config']
+    camera_names    = config['camera_names']
+    task_name       = config['task_name']
+    max_timestamps  = config['episode_len']
+    max_episodes    = config['num_episodes']
+    temporal_agg    = config['temporal_agg']
+    save_video      = config['save_video']
 
     # load policy and stats
     ckpt_path = os.path.join(ckpt_dir, ckpt_name)
-    policy = ACTPolicy(policy_config)
+    if config['policy_class'] == 'mlp':
+        policy = CNNMLPPolicy(policy_config)
+    elif config['policy_class'] == 'act':
+        policy = ACTPolicy(policy_config)
+    
     loading_status =policy.load_state_dict(torch.load(ckpt_path))
     print(f'loading status: {loading_status}')
     policy = policy.to(device)
@@ -128,10 +141,10 @@ def test_on_data(config):
 
     # TODO: make query freq 独立于 chunk size，使得在使用时间集成时可以延迟几个ts
     # TODO: 研究独立后的query freq对于成功率的影响
-    query_frequecy = policy_config['num_queries']
+    query_frequecy = policy_config['chunk_size']
     if temporal_agg:
         query_frequecy = 1
-        num_queries = policy_config['num_queries'] # TODO: explain this
+        chunk_size = policy_config['chunk_size'] # TODO: explain this
     
     # TODO: make this scale configurable
     max_timestamps = int(max_timestamps * 1)
@@ -147,7 +160,7 @@ def test_on_data(config):
         if temporal_agg:
             # max_ts, max_ts+chunk size, state_dim
             # 记录推理的actions ?
-            all_time_actions = torch.zeros([max_timestamps, max_timestamps+num_queries, state_dim])
+            all_time_actions = torch.zeros([max_timestamps, max_timestamps+chunk_size, state_dim])
             all_time_actions = all_time_actions.to(device)
         # IN Yaa, the state is the mskb
         # 同时引入假设，初始为 [0] * state_dim
@@ -195,7 +208,7 @@ def test_on_data(config):
                 
                 # 进行时间集成！
                 if temporal_agg:
-                    all_time_actions[[t], t:t+num_queries] = all_actions
+                    all_time_actions[[t], t:t+chunk_size] = all_actions
                     actions_for_curr_step = all_time_actions[:, t]
                     actions_populated = torch.all(actions_for_curr_step != 0, axis=1)
                     actions_for_curr_step = actions_for_curr_step[actions_populated]
@@ -214,7 +227,7 @@ def test_on_data(config):
                 # 需要后处理 action
                 # sigmoid 一下
                 # raw_action = torch.sigmoid(raw_action)
-                # raw_action = raw_action.squeeze(0).cpu().numpy()
+                raw_action = raw_action.squeeze(0).cpu().numpy()
                 print(np.round(raw_action, 2))
                 # 恢复到采集时候的分布
                 action = post_process(raw_action)
@@ -319,20 +332,30 @@ def image_preprocess(image_dict, camera_names):
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    # TODO: screen render
-    # just render dx dy + print kb action
-    parser.add_argument('--onscreen_render', action='store_true')
-    parser.add_argument('--ckpt_dir', action='store', type=str, help='ckpt_dir', required=True)
-    parser.add_argument('--ckpt_name', action='store', type=str, help='ckpt_name', required=True)
-    parser.add_argument('--task_name', action='store', type=str, help='task_name', required=True)
-    parser.add_argument('--seed', action='store', type=int, help='seed', required=True)
-    parser.add_argument('--real_O', action='store_true', help='infer in GI', required=False, default=False)
-    parser.add_argument('--save_video', action='store_true', help='save_video', required=False, default=True)
-    # for ACT
-    parser.add_argument('--chunk_size', action='store', type=int, help='chunk_size', required=False)
-    parser.add_argument('--hidden_dim', action='store', type=int, help='hidden_dim', required=False)
-    parser.add_argument('--dim_feedforward', action='store', type=int, help='dim_feedforward', required=False)
-    # 这里也进行是否时间集成的消融实验
-    parser.add_argument('--temporal_agg', action='store_true')
+    parser.add_argument('--config_name', '-c',
+                        action='store', type=str, 
+                        help='which config to be used', 
+                        choices=infer_configs.keys(),
+                        required=True)
+    parser.add_argument('--ckpt_name',
+                        action='store', type=str,
+                        help='which ckpt to infer', 
+                        default='policy_best.ckpt',
+                        required=False)
+    parser.add_argument('--real_O', 
+                        action='store_true', 
+                        help='infer in GI')
+    parser.add_argument('--save_video', 
+                        action='store_true', 
+                        help='save_video',
+                        default=True)
+    parser.add_argument('--temporal_agg', 
+                        action='store_true',
+                        help='temporal_agg',
+                        default=True)
+    parser.add_argument('--onscreen_render',
+                        action='store_true',
+                        help='onscreen_render',
+                        default=True)
     
     main(vars(parser.parse_args()))

@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 
 __mlp_config = {
     'device': 'cuda',
@@ -16,9 +17,6 @@ __mlp_config = {
     'chunk_size': 20,
     'hidden_dim': 64,
     'dim_feedforward': 1280,
-
-    # srds，这个仅在推理时使用
-    'temporal_agg': True,
 
     'lr_backbone': 1e-5,
     'backbone': 'resnet18',
@@ -41,14 +39,35 @@ __act_config = {
     'hidden_dim': 64,
     'dim_feedforward': 1280,
 
-    'temporal_agg': True,
-
     'lr_backbone': 1e-5,
     'backbone': 'resnet18',
 }
+
+__mlp_infer_config = {**__mlp_config, **{
+    'seed': 1000,
+    'ckpt_name': 'policy_best.ckpt',
+    'temporal_agg': True,
+    # 'onscreen_render': True,
+    # 'save_video': True,
+    'video_dir': os.path.join(os.path.dirname(__file__), 'video/mlp'),
+}}
+
+__act_infer_config = {**__act_config, **{
+    'seed': 1000,
+    'ckpt_name': 'policy_best.ckpt',
+    'temporal_agg': True,
+    # 'onscreen_render': True,
+    # 'save_video': True,
+    'video_dir': os.path.join(os.path.dirname(__file__), 'video/act'),
+}}
 
 
 configs = {
     'mlp': __mlp_config,
     'act': __act_config,
+}
+
+infer_configs = {
+    'mlp': __mlp_infer_config,
+    'act': __act_infer_config,
 }
