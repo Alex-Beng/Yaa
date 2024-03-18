@@ -12,6 +12,8 @@ Yet Another Artificial GI-player
 
 # TODOs
 
+Algorithm:
+
 - [ ] Behavior Cloning
   - [ ] ACT
   - [ ] Deffusion Policy
@@ -19,6 +21,7 @@ Yet Another Artificial GI-player
 - [ ] RL finetune
   - [ ] 似乎只能AC类，所以需要critic网络，如何定义
 
+-------
 
 - [x] 定义输入和输出，observation space and action space actually
     - [x] in: 图像+感知状态
