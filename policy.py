@@ -106,9 +106,7 @@ class ACTPolicy(nn.Module):
 
             print(f'Loaded {ckpt_path}')
         
-        
-
-# IN Yaa, useless
+# 这个MLP是没有 chunk_size 的纯血 BC
 class CNNMLPPolicy(nn.Module):
     def __init__(self, args_override):
         super().__init__()
@@ -124,11 +122,27 @@ class CNNMLPPolicy(nn.Module):
         if actions is not None: # training time
             actions = actions[:, 0]
             a_hat = self.model(qpos, image, env_state, actions)
-            # TODO: fix loss computation
-            mse = F.mse_loss(actions, a_hat)
+            # mse = F.mse_loss(actions, a_hat)
             loss_dict = dict()
-            loss_dict['mse'] = mse
-            loss_dict['loss'] = loss_dict['mse']
+            # 使用类似的键盘bce + 鼠标l1 的loss
+            mouse_actions = actions[:, -2:]
+            keyboard_actions = actions[:, :-2]
+            
+            mouse_a_hat = a_hat[:, -2:]
+            keyboard_a_hat = a_hat[:, :-2]
+            
+            mouse_l1 = F.l1_loss(mouse_a_hat, mouse_actions, reduction='none')
+            keyboard_ce = F.binary_cross_entropy_with_logits(keyboard_a_hat, keyboard_actions, reduction='none')
+
+            mouse_l1 = mouse_l1.sum()
+            keyboard_ce = keyboard_ce.sum()
+
+            action_loss = (mouse_l1 + keyboard_ce) / 2        
+
+            loss_dict['mouse_l1'] = mouse_l1
+            loss_dict['keyboard_ce'] = keyboard_ce
+            loss_dict['loss'] = action_loss
+
             return loss_dict
         else: # inference time
             a_hat = self.model(qpos, image, env_state) # no action, sample from prior
