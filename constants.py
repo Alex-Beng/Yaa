@@ -54,7 +54,7 @@ TASK_CONFIG = {
     # 名椎滩好感任务
     'nazuchi_beach_friendship': {
         'dataset_dir': os.path.join(ROOT_PATH, './datasets/nazuchi_beach_friendship'),
-        'num_episodes': 50,
+        'num_episodes': 20, # 先在 20 个轨迹上测试
         'episode_len': 400, # TODO: fix in record
         # episode 现在是load_data运行时决定的
         # 推理时如何确定？

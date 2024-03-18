@@ -28,21 +28,17 @@ class ACTPolicy(nn.Module):
                                          std=[0.5, 0.5, 0.5])
         image = normalize(image)
         if actions is not None: # training time
-            # nmd 在算loss的时候才使用chunk_size，
-            # 显存是真不考虑了是吧
-            actions = actions[:, :self.model.chunk_size]
-            is_pad = is_pad[:, :self.model.chunk_size]
 
             # mouse action & keyboard action
-            mouse_actions = actions[:, :, -3:]
-            keyboard_actions = actions[:, :, :-3]
+            mouse_actions = actions[:, :, -2:]
+            keyboard_actions = actions[:, :, :-2]
 
             a_hat, is_pad_hat, (mu, logvar) = self.model(qpos, image, env_state, actions, is_pad)
             total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, logvar)
             loss_dict = dict()
             # action shape batch_size, chunk_size, action_dim
-            mouse_a_hat = a_hat[:, :, -3:]
-            keyboard_a_hat = a_hat[:, :, :-3]
+            mouse_a_hat = a_hat[:, :, -2:]
+            keyboard_a_hat = a_hat[:, :, :-2]
 
             # mouse 使用 l1 loss，keyboard 使用 binary cross entropy
             mouse_l1 = F.l1_loss(mouse_a_hat, mouse_actions, reduction='none')

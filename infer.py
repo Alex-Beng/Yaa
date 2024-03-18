@@ -257,7 +257,7 @@ def test_on_data(config):
                 human_actions = []
                 human_actions_gt = []
                 show_updown = False
-                for state_id in range(state_dim-3):
+                for state_id in range(state_dim-2):
                     if show_updown:
                         if action_bin[state_id] == curr_state[state_id]:
                             continue

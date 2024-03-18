@@ -41,7 +41,7 @@ class YaaActionHead(nn.Module):
         # 对于ms：fc；对于kb：fc+sigmoid
         self.fc1 = nn.Linear(hidden_dim, 3)
         self.fc2 = nn.Sequential(
-            nn.Linear(hidden_dim, state_dim-3),
+            nn.Linear(hidden_dim, state_dim-2),
             # nn.Sigmoid()
         )
     def forward(self, x):

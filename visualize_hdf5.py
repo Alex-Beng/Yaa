@@ -67,7 +67,7 @@ def save_videos(image_dict, states, actions, dt, video_path):
         
         # 不关心鼠标的roll dx dy
         kb_events = []
-        for state_id in range(STATE_DIM-3):
+        for state_id in range(STATE_DIM-2):
             if state[state_id] != action[state_id]:
                 # 说明是press or release
                 is_press = True if action[state_id] == 1 else False

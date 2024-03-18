@@ -214,7 +214,7 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
             # 设置鼠标的移动为0
             event_state[SN['Mdx']] = 0
             event_state[SN['Mdy']] = 0
-            event_state[SN['MRo']] = 0
+            # event_state[SN['MRo']] = 0
         # 所以目前的event_state就是当前frame的状态
         sampled_mskb_states.append(deepcopy(event_state))
 
@@ -255,8 +255,8 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
                         print(f'event click right mouse')
                     event_state[SN['LS']] = 0
                 # 如果是滚轮滚动
-                elif event['event_type'] == 1024:
-                    event_state[SN['MRo']] += event['dy']//120
+                # elif event['event_type'] == 1024:
+                #     event_state[SN['MRo']] += event['dy']//120
                 # middle button not in KOI
         sampled_mskb_events.append(event_state)
         # print(f'event_state: {event_state}')
@@ -280,7 +280,8 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
 
 def state_to_str(state, former_state):
     # for mouse, show dx dy ml mro
-    mouse_str = f'Mdx: {state[SN["Mdx"]]}, Mdy: {state[SN["Mdy"]]}, ML: {state[SN["ML"]]}, MRo: {state[SN["MRo"]]}'
+    # mouse_str = f'Mdx: {state[SN["Mdx"]]}, Mdy: {state[SN["Mdy"]]}, ML: {state[SN["ML"]]}, MRo: {state[SN["MRo"]]}'
+    mouse_str = f'Mdx: {state[SN["Mdx"]]}, Mdy: {state[SN["Mdy"]]}, ML: {state[SN["ML"]]}'
     # for keyboard, show the change-state keys
     key_str = ''
     for i in range(14):
