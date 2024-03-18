@@ -101,23 +101,26 @@ class EpisodicDataset(torch.utils.data.Dataset):
         action_data = torch.from_numpy(padded_action).float()
         is_pad = torch.from_numpy(is_pad).bool()
 
-        # channel last
+        # channel last -> channel first
         image_data = torch.einsum('k h w c -> k c h w', image_data)
 
         # normalize image and change dtype to float
         # 图像后面还会在policy中基于ImageNet数据集的均值和方差进行归一化
-        # TODO: mv ImageNet normalization to here?
         image_data = image_data / 255.0
 
-        # 对于键盘的 state 和 action，不需要进行 N(0, 1) 的归一化，反而会导致BCELoss的值变为negetive
-        # TODO: only save and norm the mouse action which needs normalization
-        action_data_norm = (action_data - self.norm_stats["action_mean"]) / self.norm_stats["action_std"]
-        action_data[:, -2:] = action_data_norm[:, -2:]
-        
-        obs_state_data_norm = (obs_state_data - self.norm_stats['obs_state_mean']) / self.norm_stats['obs_state_std']
-        obs_state_data[:-2] = obs_state_data_norm[:-2]
-        # 可能会出现显存泄露？
-        del action_data_norm, obs_state_data_norm
+        # 只对action的最后两个维度进行norm
+        mouse_action = action_data[:, -2:]
+        # TODO: 设置两种norm方式
+        if True:
+            mouse_action = (mouse_action - self.norm_stats["mouse_action_min"]) / (self.norm_stats["mouse_action_max"] - self.norm_stats["mouse_action_min"])
+            # print(f'min mouse action: {torch.min(mouse_action, dim=0)}, max mouse action: {torch.max(mouse_action, dim=0)}')
+        else:
+            mouse_action = (mouse_action - self.norm_stats["mouse_action_mean"]) / self.norm_stats["mouse_action_std"]
+            # print(f'min mouse action: {torch.min(mouse_action, dim=0)}, max mouse action: {torch.max(mouse_action, dim=0)}')
+         
+        action_data[:, -2:] = mouse_action
+        # 设置pad后的action为0
+        action_data[action_len:, :] = 0
 
         return image_data, obs_state_data, action_data, is_pad
 
@@ -188,31 +191,31 @@ def get_norm_stats(dataset_dir, num_episodes):
         all_state_data.append(torch.from_numpy(obs_state))
         all_action_data.append(torch.from_numpy(action))
         max_episode_len = max(max_episode_len, action.shape[0])
-    # 使用另一种计算方式进行验证
+
     # concat 所有 episode 的 state/action 到 [\sum_i episode_len, state/action_dim]
-    # 计算 state 和 action 的均值和标准差
     all_state_data = torch.cat(all_state_data, dim=0)
     all_action_data = torch.cat(all_action_data, dim=0)
-    # print(all_state_data_w2.shape, all_action_data_w2.shape)
+
+    # keyboard state and action 不需要进行norm，全是0/1
+    # mouse state 不需要进行norm，全是0 
+    mouse_action = all_action_data[:, -2:]
+
+    # 归一化，减去最小值，除以最大值
+    mouse_action_min = torch.min(mouse_action, dim=0).values
+    mouse_action_max = torch.max(mouse_action, dim=0).values
     
-    state_mean = torch.mean(all_state_data, dim=0)
-    state_std = torch.std(all_state_data, dim=0)
+    # 标准化，减去均值，除以标准差
+    mouse_action_mean = torch.mean(mouse_action, dim=0)
+    mouse_action_std = torch.std(mouse_action, dim=0)
 
-    action_mean = torch.mean(all_action_data, dim=0)
-    action_std = torch.std(all_action_data, dim=0)
 
-    # clip to [1e-2, inf]
-    # std 需要clip，因为会出现在分母上。
-    action_std = torch.clip(action_std, 1e-3, np.inf) 
-    state_std = torch.clip(state_std, 1e-3, np.inf)
-    # print(action_mean.storage())
-    # print(state_mean, state_std, action_mean, action_std)
-    # exit()
-
-    stats = {"action_mean": action_mean.numpy().squeeze(), "action_std": action_std.numpy().squeeze(),
-                "obs_state_mean": state_mean.numpy().squeeze(), "obs_state_std": state_std.numpy().squeeze(),
-            "example_state": obs_state}
-    
+    stats = {
+        "mouse_action_min": mouse_action_min.numpy().squeeze(), 
+        "mouse_action_max": mouse_action_max.numpy().squeeze(),
+        "mouse_action_mean": mouse_action_mean.numpy().squeeze(), 
+        "mouse_action_std": mouse_action_std.numpy().squeeze(),
+        "max_episode_len": max_episode_len
+    }
     return stats, max_episode_len
 
 
@@ -245,9 +248,7 @@ def load_data(dataset_dir, num_episodes, camera_names, chunk_size, batch_size_tr
 
 def load_data_test(dataset_dir, ckpt_dir, episode_id, camera_names):
     # 不进行训练集和验证集的划分
-    # norm_stats, max_episode_len = get_norm_stats(dataset_dir, num_episodes)
     # norm_stats 从pkl文件中读取，训练时必然保存的
-
     norm_stats = None
     with open(os.path.join(ckpt_dir, 'dataset_stats.pkl'), 'rb') as f:
         norm_stats = pickle.load(f)
