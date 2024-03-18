@@ -6,13 +6,15 @@ __mlp_config = {
 
     'policy_class': 'mlp',
     'ckpt_dir': os.path.join(os.path.dirname(__file__), 'models/mlp'),
-    'pretrained': False,
-    'pretrained_ckpt': None,
+    'pretrained': True,
+    'pretrained_ckpt': r'./models/mlp/policy_epoch_100_seed_0.ckpt',
     'task_name': 'nazuchi_beach_friendship',
-    'batch_size': 4,
+    'batch_size': 20,
     'seed': 0,
     'num_epochs': 2000,
     'lr': 1e-4,
+    # mlp 目前参数量在config里面没法调，都是写死的
+    # 实际没用
     'kl_weight': 100,
     'chunk_size': 20,
     'hidden_dim': 64,
