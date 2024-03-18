@@ -63,8 +63,8 @@ def main(args):
                      'device'           : device,
                      }
     config = {
-        'pretrained'        : False,
-        'pretrained_ckpt'   : None,
+        'pretrained'        : config['pretrained'],
+        'pretrained_ckpt'   : config['pretrained_ckpt'],
         'num_epochs'        : num_epochs,
         'ckpt_dir'          : ckpt_dir,
         'episode_len'       : episode_len,
