@@ -52,16 +52,10 @@ class GIDataEnv:
         
     def render(self):
         # 实际是取出当前step的图像
-
         image_tensors = self.dataset[self.step_id][0]
-        # torch.Size([len(camera_names), 3, 480, 640])
-        # print(curr_image.shape)
-        
         image_dict = {}
         for i in range(len(self.camera_names)):
             # make it numpy in shape (480, 640, 3)
-            # 逆天，这个转置操作
-            # 错误的两次预处理，dim顺序的问题在这里又改回去了
             curr_image = image_tensors[i].numpy()
             image_dict[self.camera_names[i]] = curr_image
         return image_dict
