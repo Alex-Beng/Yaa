@@ -5,6 +5,10 @@ import pickle
 from random import randint
 from copy import deepcopy
 
+import win32gui
+import win32ui
+import win32con
+
 import numpy as np
 import torch
 import h5py
@@ -340,6 +344,43 @@ def detach_dict(d):
 def set_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
+
+# windows capture
+def capture(hwnd):
+    # 获取窗口的设备上下文
+    hwndDC = win32gui.GetWindowDC(hwnd)
+    mfcDC = win32ui.CreateDCFromHandle(hwndDC)
+    saveDC = mfcDC.CreateCompatibleDC()
+
+    # 获取窗口的大小
+    left, top, right, bot = win32gui.GetClientRect(hwnd)
+    width = right - left
+    height = bot - top
+
+    # 创建一个位图来存储捕获内容
+    saveBitMap = win32ui.CreateBitmap()
+    saveBitMap.CreateCompatibleBitmap(mfcDC, width, height)
+    saveDC.SelectObject(saveBitMap)
+
+    # 使用BitBlt捕获窗口图像
+    result = saveDC.BitBlt((0, 0), (width, height), mfcDC, (0, 0), win32con.SRCCOPY)
+
+    # 将捕获的图像转换为numpy数组
+    bmpinfo = saveBitMap.GetInfo()
+    bmpstr = saveBitMap.GetBitmapBits(True)
+    imdata = np.frombuffer(bmpstr, dtype='uint8')
+    imdata.shape = (height, width, 4)
+
+    # 清理资源
+    win32gui.DeleteObject(saveBitMap.GetHandle())
+    saveDC.DeleteDC()
+    mfcDC.DeleteDC()
+    win32gui.ReleaseDC(hwnd, hwndDC)
+
+    # 返回numpy数组
+    return imdata
+
+
 
 if __name__ == "__main__":
     dts = EpisodicDatasetTest([0])
