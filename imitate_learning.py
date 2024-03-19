@@ -1,5 +1,6 @@
 # 使用act网络进行模仿学习
 import os
+import json
 import pickle
 import argparse
 from copy import deepcopy
@@ -86,6 +87,10 @@ def main(args):
     with open(stats_path, 'wb') as f:
         # 保存这一数据集的mean and std for 推理
         pickle.dump(stats, f)
+    # 保存config 到ckpt_dir
+    config_path = os.path.join(ckpt_dir, f'config.json')
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=4)
     
     best_ckpt_info = train_bc(train_dataloader, val_dataloader, config)
     best_epoch, min_val_loss, best_state_dict = best_ckpt_info
