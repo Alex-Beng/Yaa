@@ -42,7 +42,7 @@ class ACTPolicy(nn.Module):
 
             # mouse 使用 l1 loss，keyboard 使用 binary cross entropy
             mouse_l1 = F.l1_loss(mouse_a_hat, mouse_actions, reduction='none')
-            mouse_l1 *= 3
+            # mouse_l1 *= 3
             # 使用l2 loss，但是需要进行clip
             # mouse_l1 = F.mse_loss(mouse_a_hat, mouse_actions, reduction='none')
     
@@ -67,10 +67,10 @@ class ACTPolicy(nn.Module):
 
 
             # print(f'Mouse L1 {mouse_l1}, Keyboard CE {keyboard_ce}')
-            # keyboard_ce *= 1.2
+            keyboard_ce *= 1.5
             # mouse_l1 *= 0.8
             action_loss_sum = (mouse_l1 + keyboard_ce) / 2
-            # l1 = keyboard_ce
+            # action_loss_sum = keyboard_ce 
             
             loss_dict['action_loss_sum'] = action_loss_sum
             loss_dict['mouse_l1'] = mouse_l1
@@ -137,7 +137,9 @@ class CNNMLPPolicy(nn.Module):
             mouse_l1 = mouse_l1.sum()
             keyboard_ce = keyboard_ce.sum()
 
-            action_loss = (mouse_l1 + keyboard_ce) / 2        
+            action_loss = (mouse_l1 + keyboard_ce) / 2   
+            # 先只学键盘，后面再学鼠标
+            # action_loss = keyboard_ce     
 
             loss_dict['mouse_l1'] = mouse_l1
             loss_dict['keyboard_ce'] = keyboard_ce
@@ -171,7 +173,7 @@ class CNNMLPPolicy(nn.Module):
             self.load_state_dict(model_dict, strict=False)
 
             print(f'Loaded {ckpt_path}')
-            
+
 def kl_divergence(mu, logvar):
     batch_size = mu.size(0)
     assert batch_size != 0
