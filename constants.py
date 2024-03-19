@@ -27,6 +27,27 @@ key2scancode = {
     '4': 0x05,
 }
 
+# generate from copilot
+# the up scancode of the key
+# 等抄了GIA的postmessage再说吧，目前没有用
+key2scancode_ups = {
+    'W': 0x91,
+    'A': 0x9E,
+    'S': 0x9F,
+    'D': 0xA0,
+    'Q': 0x90,
+    'E': 0x92,
+    'X': 0xAD,
+    ' ': 0xB9,
+    'LS': 0x9D,
+    'T': 0x94,
+    'Z': 0xAC,
+    '1': 0x82,
+    '2': 0x83,
+    '3': 0x84,
+    '4': 0x85,
+}
+
 # SCANCODE of KOI(key of interest)
 SC_idx2sc = [ key2scancode[k] for k in SN_idx2key[:-4] ]
 
