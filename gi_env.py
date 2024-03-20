@@ -6,6 +6,7 @@
 # JUST for aligning with act 
 
 from threading import Thread, Lock
+from readerwriterlock import rwlock
 from queue import Queue # copilot said it is thread safe
 
 # TODO: 做一套send/post message的接口，或者从GIA抄过来
@@ -105,7 +106,7 @@ class GIDataEnv:
         return image_dict, action
 
 latest_capture = None
-capture_lock = Lock()
+capture_lock = rwlock.RWLockFair()
 
 class CaptureThread(Thread):
     def __init__(self, hwnd) -> None:
@@ -116,7 +117,7 @@ class CaptureThread(Thread):
     def run(self):
         global latest_capture
         while self.running:
-            with capture_lock:
+            with capture_lock.gen_wlock():
                 latest_capture = capture(self.hwnd)
     def stop(self):
         self.running = False
@@ -156,7 +157,7 @@ class GIRealEnv:
     
     def render(self):
         global latest_capture
-        with capture_lock:
+        with capture_lock.gen_rlock():
             return latest_capture
     
     def step(self, action):
@@ -192,12 +193,30 @@ if __name__ == '__main__':
     print(ret)
     
     env = GIRealEnv({'kb_threshold': 0.5})
+    # test frequency
+    import time
+    beg_t = time.time()
+    hzs = []
+    for i in range(1000):
 
-    # for i in range(100):
-    #     img = env.render()
-    #     # print(img.shape)
-    #     cv2.imshow('img', img)
-    #     cv2.waitKey(1)
+        img = env.render()
+        cv2.imshow('img', img)
+        cv2.waitKey(1)
+
+
+        end_t = time.time()
+        freq = 1 / (end_t - beg_t)
+        print(f'hz: {freq:.2f}', end='\r')
+        hzs.append(freq)
+        beg_t = end_t
+        # 0.1 = 20hz
+        # time.sleep(0.1)
+    # plot hz
+    import matplotlib.pyplot as plt
+    plt.plot(hzs)
+    plt.show()
+    exit()
+        # print(img.shape)
     #     # if not env.step(None):
     #     #     env.reset()
     from constants import SN
