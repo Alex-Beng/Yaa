@@ -43,7 +43,7 @@ def main(args):
     chunk_size          = config['chunk_size']
     backbone            = config['backbone']
     
-    ckpt_name           = args['ckpt_name']
+    ckpt_name           = args['ckpt_name'] if args['ckpt_name'] else config['ckpt_name']
     real_GI             = args['real_O']
     save_video          = args['save_video']
     onscreen_render     = args['onscreen_render']
@@ -98,13 +98,10 @@ def main(args):
         os.makedirs(config['video_dir'])
 
     # test !
-    if not real_GI:
-        test_on_data(config)
-    else:
-        test_on_real(config)
+    test_bc(config)
 
-
-def test_on_data(config):
+def test_bc(config):
+    print(config)
     set_seed(config['seed'])
     ckpt_dir        = config['ckpt_dir']
     ckpt_name       = config['ckpt_name']
@@ -136,8 +133,15 @@ def test_on_data(config):
     with open(stats_path, 'rb') as f:
         stats = pickle.load(f)
     
-    pre_process = lambda state: (state - stats['obs_state_mean']) / stats['obs_state_std']
-    post_process = lambda action: action * stats['action_std'] + stats['action_mean']
+    # 状态已经是0-1，无需预处理
+    pre_process = lambda state: state
+    def post_process(action):
+        # 反归一 dx dy
+        action[-2:] = action[-2:] * (stats['mouse_action_max'] - stats['mouse_action_min']) + stats['mouse_action_min']
+        # 对于 keyboard action，sigmoid到概率
+        action[:-2] = 1 / (1 + np.exp(-action[:-2]))
+        return action
+
     print(f'stats: {stats}')
     
     # load env
@@ -173,7 +177,7 @@ def test_on_data(config):
         state_history = state_history.to(device)
 
         # mksb state
-        # 最后三个为鼠标滚轮, dx, dy。无需考虑状态
+        # 最后两个为鼠标 dx, dy。无需考虑状态
         curr_state = np.zeros([state_dim]) # easier for cpu operations
         image_list = [] # for video?
         state_list = []
@@ -227,18 +231,17 @@ def test_on_data(config):
                 else:
                     # 就是每隔 chunk size推理一次
                     raw_action = all_actions[:, t % query_frequecy]
-                # 保留sigmoid之前的 mro, dx, dy
+                
                 
                 # 需要后处理 action
                 # sigmoid 一下
                 # raw_action = torch.sigmoid(raw_action)
+
+                # 需要后处理 action
+                # sigmoid 一下
+                # raw_action = torch.sigmoid(raw_action)
                 raw_action = raw_action.squeeze(0).cpu().numpy()
-                print(np.round(raw_action, 2))
-                # 恢复到采集时候的分布
                 action = post_process(raw_action)
-                # print action in 两位小数
-                print(np.round(action, 1))
-                # print(ground_action)
 
                 # 需要把action到离散状态
                 # TODO: make threshold configurable
@@ -303,11 +306,11 @@ def test_on_data(config):
                 # 在frame 中间绘制一个箭头，表示dx dy
                 dx, dy = int(dx), int(dy)
                 dx_gt, dy_gt = int(dx_gt), int(dy_gt)
-                curr_image = cv2.arrowedLine(curr_image, (640, 240), (640+dx, 240+dy), (0, 0, 255), 2)
+                curr_image = cv2.arrowedLine(curr_image, (320, 240), (320+dx, 240+dy), (0, 0, 255), 2)
                 # 在旁边绘制另一个 predicted dx dy
                 curr_image = cv2.arrowedLine(curr_image, (320, 240), (320+dx, 240+dy), (0, 0, 255), 2)
 
-                curr_image = cv2.arrowedLine(curr_image, (640, 240), (640+dx_gt, 240+dy_gt), (0, 255, 0), 2)
+                curr_image = cv2.arrowedLine(curr_image, (320, 240), (320+dx_gt, 240+dy_gt), (0, 255, 0), 2)
                 if onscreen_render:
                     cv2.imshow('image', curr_image)
                     cv2.waitKey(1)
@@ -316,10 +319,6 @@ def test_on_data(config):
                 print(f'step {t}/{max_timestamps}')
     
 
-
-def test_on_real(config):
-    # 
-    pass
 
 def image_preprocess(image_dict, camera_names):
     # 图像进入推理前的预处理
@@ -345,7 +344,6 @@ if __name__ == '__main__':
     parser.add_argument('--ckpt_name',
                         action='store', type=str,
                         help='which ckpt to infer', 
-                        default='policy_best.ckpt',
                         required=False)
     parser.add_argument('--real_O', 
                         action='store_true', 
