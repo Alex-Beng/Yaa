@@ -60,7 +60,7 @@ void bb_capture_producer(HWND& window_handle, std::chrono::steady_clock::time_po
         cv::Mat frame;
         auto curr_time = std::chrono::high_resolution_clock::now();
         auto curr_time_stamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_time).count();
-        bb_capture(window_handle, frame);
+        frame = bb_capture(window_handle);
         {
             std::lock_guard<std::mutex> lock(mat_mtx);
             mat_queue.push(

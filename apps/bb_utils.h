@@ -22,6 +22,40 @@ bool find_window_cloud(HWND& ret_handle) {
     return ret_handle != NULL;
 }
 
+// copilot generated code
+cv::Mat bb_capture(HWND hwnd) {
+    HDC hdcScreen = GetDC(NULL);
+    HDC hdcWindow = GetDC(hwnd);
+
+    RECT windowsRect;
+    GetWindowRect(hwnd, &windowsRect);
+
+    int width = windowsRect.right - windowsRect.left;
+    int height = windowsRect.bottom - windowsRect.top;
+    HDC hdcMemDC = CreateCompatibleDC(hdcWindow); 
+    HBITMAP hbmScreen = CreateCompatibleBitmap(hdcWindow, width, height); 
+    SelectObject(hdcMemDC, hbmScreen);
+
+    BitBlt(hdcMemDC, 0, 0, width, height, hdcWindow, 0, 0, SRCCOPY);
+
+    BITMAPINFOHEADER bmi = {0};
+    bmi.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.biPlanes = 1;
+    bmi.biBitCount = 32;
+    bmi.biWidth = width;
+    bmi.biHeight = -height;
+    bmi.biCompression = BI_RGB;
+
+    cv::Mat mat(height, width, CV_8UC4);
+    GetDIBits(hdcWindow, hbmScreen, 0, height, mat.data, (BITMAPINFO*)&bmi, DIB_RGB_COLORS);
+
+    DeleteObject(hbmScreen);
+    DeleteDC(hdcMemDC);
+    ReleaseDC(NULL, hdcScreen);
+    ReleaseDC(hwnd, hdcWindow);
+
+    return mat;
+}
 
 // stolen from cvat shamelessly
 bool bb_capture(HWND& giHandle, cv::Mat& frame) {
