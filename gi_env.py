@@ -215,6 +215,8 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     plt.plot(hzs)
     plt.show()
+    
+    del env.capture_thread
     exit()
         # print(img.shape)
     #     # if not env.step(None):
