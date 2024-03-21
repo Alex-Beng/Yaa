@@ -75,10 +75,18 @@ TASK_CONFIG = {
     # 名椎滩好感任务
     'nazuchi_beach_friendship': {
         'dataset_dir': os.path.join(ROOT_PATH, './datasets/nazuchi_beach_friendship'),
-        'num_episodes': 20, # 先在 20 个轨迹上测试
+        'num_episodes': 50, 
         'episode_len': 400, # TODO: fix in record
         # episode 现在是load_data运行时决定的
         # 推理时如何确定？
+        'camera_names': CAMERA_NAMES,
+    },
+    # 名椎滩好感任务 + 不过于剧烈的随机视角，尚未录制
+    # mr means mild random
+    'nazuchi_beach_friendship_mr': {
+        'dataset_dir': os.path.join(ROOT_PATH, './datasets/nazuchi_beach_friendship_mr'),
+        'num_episodes': 20, 
+        'episode_len': 400, # TODO: fix in record
         'camera_names': CAMERA_NAMES,
     }
 }
