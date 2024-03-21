@@ -28,13 +28,13 @@ __act_config = {
     'device': 'cuda',
 
     'policy_class': 'act',  # 'mlp' or 'act for now
-    'ckpt_dir': os.path.join(os.path.dirname(__file__), 'models/act_mse_mouse'),
+    'ckpt_dir': os.path.join(os.path.dirname(__file__), 'models/act_100l1'),
     'pretrained': True,
-    'pretrained_ckpt': r'./models/act_after6k/policy_epoch_2300_seed_0.ckpt',
+    'pretrained_ckpt': r'./models/act_mse_mouse/policy_best.ckpt',
     'task_name': 'nazuchi_beach_friendship',
-    'batch_size': 8,
+    'batch_size': 25,
     'seed': 0,
-    'num_epochs': 4000,
+    'num_epochs': 2000,
     'lr': 1e-4,
     'kl_weight': 100,
     'chunk_size': 40,
