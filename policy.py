@@ -43,7 +43,7 @@ class ACTPolicy(nn.Module):
             # mouse 使用 l1 loss，keyboard 使用 binary cross entropy
             mouse_l1 = F.l1_loss(mouse_a_hat, mouse_actions, reduction='none')
             # mouse_l1 = F.mse_loss(mouse_a_hat, mouse_actions, reduction='none')
-            # mouse_l1 *= 100
+            mouse_l1 *= 100
             # 使用l2 loss，但是需要进行clip
             # mouse_l1 = F.mse_loss(mouse_a_hat, mouse_actions, reduction='none')
     
