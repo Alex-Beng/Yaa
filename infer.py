@@ -101,7 +101,6 @@ def main(args):
     test_bc(config)
 
 def test_bc(config):
-    print(config)
     set_seed(config['seed'])
     ckpt_dir        = config['ckpt_dir']
     ckpt_name       = config['ckpt_name']
@@ -134,6 +133,7 @@ def test_bc(config):
         stats = pickle.load(f)
     
     # 状态已经是0-1，无需预处理
+    # 这玩意是不是应该交给env？
     pre_process = lambda state: state
     def post_process(action):
         # 反归一 dx dy
