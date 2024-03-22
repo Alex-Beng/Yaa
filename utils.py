@@ -66,7 +66,7 @@ class EpisodicDataset(torch.utils.data.Dataset):
                 # TODO: make other keys more possible too
                 # TODO: make probability configurable
                 # 有概率直接短路到E，即开始战斗
-                if np.random.rand() > 0.1:
+                if np.random.rand() < 0.1:
                     start_ts = randint(e_begin, episode_len - 1)
                 else:
                     start_ts = np.random.choice(episode_len)
