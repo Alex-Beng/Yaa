@@ -26,3 +26,5 @@ mlp_imitate_learning.py
 mlp_infer.py
 /video/
 /*.dll
+/shell_scripts/test.*
+/shell_scripts/train.*
