@@ -21,9 +21,7 @@ std::queue<std::pair<cv::Mat, long long>> mat_queue;
 std::mutex mat_mtx;
 std::condition_variable mat_cv;
 
-// which can be lock-free ?
-// cause basic var type is lock-free ?
-// idk, just use std::atomic for trying
+// atomic for lock-free
 std::atomic<bool> is_recording = false;
 
 struct BBCaptureConfig
