@@ -23,6 +23,7 @@ bool find_window_cloud(HWND& ret_handle) {
 }
 
 // copilot generated code
+// TODO: fix the dpi issue
 cv::Mat bb_capture(HWND hwnd) {
     HDC hdcScreen = GetDC(NULL);
     HDC hdcWindow = GetDC(hwnd);
