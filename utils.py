@@ -228,12 +228,17 @@ def load_data(dataset_dir, num_episodes, camera_names, chunk_size, batch_size_tr
     # obtain train test split
     # TODO: make this ratio configurable
     # 居然是按示教轨迹来划分训练集和验证集的
+    # num_episodes = 28 # hack for only newer 30 episodes
+    # oid2nid = {i: i+20 for i in range(num_episodes)}
     train_ratio = 0.8
     shuffled_indices = np.random.permutation(num_episodes)
     train_indices = shuffled_indices[:int(train_ratio * num_episodes)]
     # TODO: make this configurable
     train_indices = deepcopy(shuffled_indices)
     val_indices = shuffled_indices[int(train_ratio * num_episodes):]
+    
+    # train_indices = [oid2nid[i] for i in train_indices]
+    # val_indices = [oid2nid[i] for i in val_indices]
 
     # obtain normalization stats & max_episode for qpos and action
     # use max_episode to pad in dataloader
