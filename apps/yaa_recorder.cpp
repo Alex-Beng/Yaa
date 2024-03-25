@@ -14,12 +14,12 @@
 
 #include "ms_kb_utils.h"
 #include "bb_utils.h"
+#include "ring_buf.h"
 
-// just three function for three thread
-// define the needed queues here
-std::queue<std::pair<cv::Mat, long long>> mat_queue;
-std::mutex mat_mtx;
-std::condition_variable mat_cv;
+// ring buffer
+// 实际上只要队列的mutex释放的够快，
+// 性能应该是差不多的，但是ring buf不会炸内存+写都写了
+std::shared_ptr<LockFreeRingBuffer<std::pair<cv::Mat, long long>>> ring_buf = nullptr;
 
 // atomic for lock-free
 std::atomic<bool> is_recording = false;
@@ -38,6 +38,7 @@ struct BBCaptureConfig
     std::string output_path;
     std::string task_name;
     int episode_id;
+    int ring_buf_size;
 
     // print config
     void print() {
@@ -58,15 +59,24 @@ void bb_capture_producer(HWND& window_handle, std::chrono::steady_clock::time_po
         cv::Mat frame;
         auto curr_time = std::chrono::high_resolution_clock::now();
         auto curr_time_stamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_time).count();
-        frame = bb_capture(window_handle);
-        {
-            std::lock_guard<std::mutex> lock(mat_mtx);
-            mat_queue.push(
-                std::make_pair(frame, curr_time_stamp)
-            );
-        }
-        mat_cv.notify_one();
+        
+        bb_capture(window_handle, frame);
+
+        // 通过ring buf size决定sleep时间
+        int sleep_time = ring_buf->size() / 640. * 10;
+        // if (ring_buf->size() >= 320) {
+            // std::cout<<"ring buf full"<<std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+            // continue;
+        // }
+
+        ring_buf->push(std::make_pair(frame, curr_time_stamp));
         frame_cnt++;
+        // slow down
+        // auto time_used = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - curr_time).count();
+        // auto sleep_time = 1000/60 - time_used > 0 ? 1000/60 - time_used : 0;
+        // std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
+        // printf("\r bb_cap_freq: %f", 1000.0/time_diff);
     }
     // only print in the end
     std::cout<<"bb_capture_producer: "<<frame_cnt<<std::endl;
@@ -78,14 +88,14 @@ void bb_capture_consumer(BBCaptureConfig& config) {
     auto frame_cnt = 0;
     // init writers
     auto writer_rgb = cv::VideoWriter(
-        config.output_path + "/" + config.task_name + "/" + std::to_string(config.episode_id) + ".mp4",
-        cv::VideoWriter::fourcc('a', 'v', 'c', '1'),
+        config.output_path + "/" + config.task_name + "/" + std::to_string(config.episode_id) + ".mov",
+        cv::VideoWriter::fourcc('m', 'j', 'p', 'g'),
         config.fps,
         cv::Size(config.width, config.height)
     );
     auto wirter_alpha = cv::VideoWriter(
-        config.output_path + "/" + config.task_name + "/" + std::to_string(config.episode_id) + "_alpha.mp4",
-        cv::VideoWriter::fourcc('a', 'v', 'c', '1'),
+        config.output_path + "/" + config.task_name + "/" + std::to_string(config.episode_id) + "_alpha.mov",
+        cv::VideoWriter::fourcc('m', 'j', 'p', 'g'),
         config.fps,
         cv::Size(config.width, config.height),
         false
@@ -95,11 +105,28 @@ void bb_capture_consumer(BBCaptureConfig& config) {
     // 50fps, 120s, 10 time larger
     timestamps.reserve(50*120*10);
 
-    while (is_recording) {
-        std::unique_lock<std::mutex> lock(mat_mtx);
-        mat_cv.wait(lock, []{return !mat_queue.empty();});
-        auto frame = mat_queue.front().first;
-        auto timestamp = mat_queue.front().second;
+    std::pair<cv::Mat, long long> frame_ts;
+    cv::Mat frame;
+    long long timestamp;
+    // 10 ms
+    long long gap_ns = 10 * 1000 * 1000;
+    long long last_ts = 0;
+    while (is_recording || !ring_buf->empty()) {
+        // std::cout<<"\rring_buf_size: "<<ring_buf->size()<<std::endl;
+        printf("\r ring_buf_size: %d", ring_buf->size());
+        if (!ring_buf->pop(frame_ts)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
+        frame = frame_ts.first;
+        timestamp = frame_ts.second;
+
+        last_ts = last_ts == 0 ? timestamp : last_ts;
+        // check timestamp
+        if (timestamp - last_ts < gap_ns) {
+            // std::cout<<"skip frame"<<std::endl;
+            continue;
+        }
 
         // check frame size
         if (frame.cols != config.width || frame.rows != config.height) {
@@ -117,9 +144,8 @@ void bb_capture_consumer(BBCaptureConfig& config) {
         wirter_alpha.write(alpha);
         // save timestamp
         timestamps.emplace_back(timestamp);
+        
 
-        mat_queue.pop();
-        lock.unlock();
         // do something with frame
         frame_cnt++;
     }
@@ -236,6 +262,9 @@ void read_config(int argc, char const *argv[], BBCaptureConfig& config) {
     app.add_option("-e,--episode_id", config.episode_id, "episode_id")
         ->required(false)
         ->default_val(-1);
+    app.add_option("--ring_buf_size", config.ring_buf_size, "ring buffer size, <=0 for disable ring buffer")
+        ->required(false)
+        ->default_val(640);
 
     try {
         app.parse(argc, argv);
@@ -273,6 +302,10 @@ int main(int argc, char const *argv[]) {
         std::cout << "trying to auto indexing" << std::endl;
         config.episode_id = auto_indexing(config);
     }
+    // make ring_buf
+    config.ring_buf_size = config.ring_buf_size > 0 ? config.ring_buf_size : 32;
+    ring_buf = std::make_shared<LockFreeRingBuffer<std::pair<cv::Mat, long long>>>(config.ring_buf_size);
+
     // config.print();
 
     // check path exist

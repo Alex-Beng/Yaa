@@ -97,7 +97,7 @@ void yaa_recorder_consumer() {
 
 void ring_buf_capture_producer(HWND& window_handle, std::chrono::steady_clock::time_point start_time) {
     auto frame_count = 0;
-    for (int i=0; i<1000; i++) {
+    for (int i=0; i<5000; i++) {
         cv::Mat frame;
         auto curr_time = std::chrono::high_resolution_clock::now();
         auto curr_time_stamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_time).count();
