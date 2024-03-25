@@ -306,7 +306,7 @@ int main(int argc, char const *argv[]) {
     config.ring_buf_size = config.ring_buf_size > 0 ? config.ring_buf_size : 32;
     ring_buf = std::make_shared<LockFreeRingBuffer<std::pair<cv::Mat, long long>>>(config.ring_buf_size);
 
-    // config.print();
+    config.print();
 
     // check path exist
     // unwarp_or create
