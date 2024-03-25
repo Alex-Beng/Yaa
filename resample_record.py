@@ -113,7 +113,7 @@ def get_sample_timestamps(record_folder, idx):
         while video_timestamps[t_v_idx] < ts:
             t_v_idx += 1
     
-        video_sample_idx.append(t_v_idx - 1)
+        video_sample_idx.append(t_v_idx - 1 if t_v_idx > 0 else 0)
     assert len(sample_timestamps) == len(video_sample_idx)
     return sample_timestamps, video_sample_idx
 
