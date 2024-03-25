@@ -284,7 +284,7 @@ int auto_indexing(BBCaptureConfig& config) {
         std::filesystem::create_directories(output_folder);
     }
     for (auto i = 0; i < max_idx; i++) {
-        auto i_video = config.output_path + "/" + config.task_name + "/" + std::to_string(i) + ".mp4";
+        auto i_video = config.output_path + "/" + config.task_name + "/" + std::to_string(i) + "._video.jsonl";
         if (!std::filesystem::exists(i_video)) {
             return i;
         }
