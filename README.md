@@ -10,6 +10,9 @@ Yet Another Artificial GI-player
 
 基于强化学习/模仿学习算法，实现原神的基于动作生成的AI。
 
+目前处于开发阶段，开发计划见issue。
+大致计划是先模仿学习，然后通过强化学习进行微调。
+
 # 仓库组成
 
 - ``apps/`` cpp写的apps，每个cpp文件对应一个应用
