@@ -87,7 +87,7 @@ def main(args):
 
         'task_name'         : task_name,
         'seed'              : config['seed'],
-        'temporal_agg'      : chunk_size,
+        'temporal_agg'      : temporal_agg,
         'camera_names'      : camera_names,
         'real_GI'           : real_GI,
         'save_video'        : save_video,
