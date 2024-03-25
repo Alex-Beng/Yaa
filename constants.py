@@ -83,9 +83,9 @@ TASK_CONFIG = {
     },
     # 名椎滩好感任务 + 不过于剧烈的随机视角，尚未录制
     # mr means mild random
-    'nazuchi_beach_friendship_mr': {
-        'dataset_dir': os.path.join(ROOT_PATH, './datasets/nazuchi_beach_friendship_mr'),
-        'num_episodes': 20, 
+    'nz2': {
+        'dataset_dir': os.path.join(ROOT_PATH, 'F:/dataset/nz2'),
+        'num_episodes': 28, 
         'episode_len': 400, # TODO: fix in record
         'camera_names': CAMERA_NAMES,
     }
