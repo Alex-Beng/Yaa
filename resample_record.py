@@ -77,13 +77,13 @@ def check_record_idx(record_folder, idx):
     # 检查
     # {idx}_alpha.mp4, {idx}_mskb.jsonl, {idx}_video.jsonl, {idx}.mp4
     # 是否存在
-    if not os.path.exists(os.path.join(record_folder, f'{idx}_alpha.mp4')):
+    if not os.path.exists(os.path.join(record_folder, f'{idx}_alpha.mov')):
         return False
     if not os.path.exists(os.path.join(record_folder, f'{idx}_mskb.jsonl')):
         return False
     if not os.path.exists(os.path.join(record_folder, f'{idx}_video.jsonl')):
         return False
-    if not os.path.exists(os.path.join(record_folder, f'{idx}.mp4')):
+    if not os.path.exists(os.path.join(record_folder, f'{idx}.mov')):
         return False
     return True
 
@@ -130,8 +130,8 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
     # sample the frames first
     print(f"Sampling video {idx}...")
     t0 = time.time()
-    rgb_video_path = os.path.join(record_folder, f'{idx}.mp4')
-    alpha_video_path = os.path.join(record_folder, f'{idx}_alpha.mp4')
+    rgb_video_path = os.path.join(record_folder, f'{idx}.mov')
+    alpha_video_path = os.path.join(record_folder, f'{idx}_alpha.mov')
     rgb_cap = cv2.VideoCapture(rgb_video_path)
     alpha_cap = cv2.VideoCapture(alpha_video_path)
     frame_cnt = -1
@@ -145,6 +145,7 @@ def do_sample(record_folder, idx, tss, video_samp_idxs):
         ret, frame = rgb_cap.read()
         ret_alpha, alpha_frame = alpha_cap.read()
         if not ret or not ret_alpha:
+            print('wtf')
             break
         frame_cnt += 1
         # print(f'frame_cnt: {frame_cnt}, video_samped_head: {video_samped_head}, video_samp_idxs[video_samped_head]: {video_samp_idxs[video_samped_head]}')
@@ -366,7 +367,8 @@ def main(output_path: str, task_name: str):
         print(f'Error: {record_folder} not exists.')
         return
     # trying idx in [i, +inf)
-    idx = 0
+    # TODO: make beg idx configurable
+    idx = 20
     while True:
         if not check_record_idx(record_folder, idx):
             print(f'Error: {record_folder}/{idx} not exists.')   
@@ -380,9 +382,10 @@ def main(output_path: str, task_name: str):
         # <space> means sample gaps
         
         samp_tts, video_samp_idxs = get_sample_timestamps(record_folder, idx)
-        # print(f'len(samp_tts): {len(samp_tts)}')
+        print(f'len(samp_tts): {len(samp_tts)}')
         # video_samp_idxs = set(video_samp_idxs)
-        # print(f'len(video_samp_idxs): {len(video_samp_idxs)}')
+        print(f'len(video_samp_idxs): {len(video_samp_idxs)}')
+        print(video_samp_idxs)
         # 草，set之后变短了，说明有重复的
 
         do_sample(record_folder, idx, samp_tts, video_samp_idxs)
@@ -398,4 +401,4 @@ if __name__ == '__main__':
     # TODO: make params read from cli
     # test_resize('./build/test/0.mp4')
     # main(output_path='./build', task_name='test')    # test_resize('./build/test/1_alpha.mp4')
-    main(output_path='./datasets', task_name='nazuchi_beach_friendship')
+    main(output_path='F:/dataset', task_name='nz2')
