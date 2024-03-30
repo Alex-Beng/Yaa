@@ -28,22 +28,22 @@ Yet Another Artificial GI-player
 - ``doc/`` 亿点文档
 - ``pics/`` 图片
 - ``validates/`` 初期的python验证脚本，基本都没用
-- ``act_imitate_learning.py`` ACT网络的模仿学习
-- ``act_infer.py`` ACT网络的推理测试
-- ``constants.py`` 在python脚本中共享的常量
+- ``imitate_learning.py`` BC训练，目前可用act/mlp
+- ``infer.py`` BC推理，目前可用act/mlp
+- ``config.py`` 训练和推理的配置
+- ``constants.py`` py脚本中共享的常量
 - ``gi_env.py`` GI环境的类gym.env封装
-- ``policy.py`` ACT policy的定义
+- ``policy.py`` ACT/MLP BC policy的定义
 - ``print_dataset_stats.py`` 打印示教数据集的normalize stats
 - ``print_hdf5.py`` 打印重采样录制数据集的结构和维度数据
-- ``record.ps1`` windows下的录制脚本
-- ``resample_record.py`` 重采样录制到指定频率
-- ``test.sh`` 固定参数运行 act_infer.py 的脚本
-- ``train.sh`` 固定参数运行 act_imitate_learning.py 的脚本
+- ``shell_scripts/`` 一些shell脚本
+  - ``record.ps1`` windows下的录制脚本
+  - ``vis.sh`` 简化参数运行 visualize_hdf5.py 的脚本
 - ``utils.py`` 数据集定义和处理的utils，以及其他一些utils
-- ``vis.sh`` 简化参数运行 visualize_hdf5.py 的脚本
+- ``resample_record.py`` 重采样录制到指定频率
 - ``visualize_hdf5.py`` 可视化重采样后的录制数据集
 
-# 使用
+# BC使用
 
 
 分为录制示教和训练两个阶段（还有推理，但是还没做）。
