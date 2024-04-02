@@ -46,8 +46,12 @@ Yet Another Artificial GI-player
 # BC使用
 
 
-分为录制示教和训练两个阶段（还有推理，但是还没做）。
+分为录制示教、训练和推理三个阶段。
+目前推理还在使用pytorch，没有做任何部署和量化。
+
+可使用notebook + colab的方式进行训练和推理：
 名椎滩好感原始录制数据和使用colab进行训练notebook见[这里](https://drive.google.com/drive/folders/1m2RxUXDbJZ8_RCGmZfGicHqoe-YuQYEP?usp=drive_link)。
+
 
 工作流为：录制 -> 重采样到20Hz -> 训练 -> 推理
 
@@ -108,4 +112,13 @@ python resample_record.py --help
 训练：
 ```shell
 python act_imitate_learning.py --help
+```
+
+## 推理
+
+基于Python。
+
+推理：
+```shell
+python infer.py --help
 ```
