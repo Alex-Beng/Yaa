@@ -26,7 +26,6 @@ from config import infer_configs
 import IPython
 e = IPython.embed
 
-# TODO: make device configurable
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 def is_admin():
@@ -44,18 +43,17 @@ def main(args):
     # basic config in config.py
     set_seed(config['seed'])
     global device   
-    device              = config['device']
+    device              = config['device'] if device == 'cuda' else 'cpu'
     ckpt_dir            = config['ckpt_dir']
     policy_class        = config['policy_class']
     task_name           = config['task_name']
     chunk_size          = config['chunk_size']
     backbone            = config['backbone']
-    
-    ckpt_name           = args['ckpt_name'] if args['ckpt_name'] else config['ckpt_name']
-    real_GI             = args['real_O']
-    save_video          = args['save_video']
-    onscreen_render     = args['onscreen_render']
-    temporal_agg        = args['temporal_agg']
+    ckpt_name           = config['ckpt_name']
+    real_GI             = config['real_GI']
+    save_video          = config['save_video']
+    onscreen_render     = config['onscreen_render']
+    temporal_agg        = config['temporal_agg']
 
     # get task parameters
     task_config         = TASK_CONFIG[task_name]
@@ -109,6 +107,7 @@ def main(args):
     test_bc(config)
 
 def test_bc(config):
+    print(config)
     set_seed(config['seed'])
     ckpt_dir        = config['ckpt_dir']
     ckpt_name       = config['ckpt_name']
@@ -121,6 +120,7 @@ def test_bc(config):
     max_episodes    = config['num_episodes']
     temporal_agg    = config['temporal_agg']
     save_video      = config['save_video']
+    real_GI         = config['real_GI']
 
     # load policy and stats
     ckpt_path = os.path.join(ckpt_dir, ckpt_name)
@@ -153,7 +153,10 @@ def test_bc(config):
     print(f'stats: {stats}')
     
     # load env
-    env = GIDataEnv(config)
+    if real_GI:
+        env = GIRealEnv(config)
+    else:
+        env = GIDataEnv(config)
 
     # TODO: make query freq 独立于 chunk size，使得在使用时间集成时可以延迟几个ts
     # TODO: 研究独立后的query freq对于成功率的影响
@@ -161,7 +164,7 @@ def test_bc(config):
     if temporal_agg:
         query_frequecy = 1
         chunk_size = policy_config['chunk_size'] # TODO: explain this
-    
+
     # TODO: make this scale configurable
     max_timestamps = int(max_timestamps * 1)
 
@@ -211,6 +214,7 @@ def test_bc(config):
                 image_dict, ground_action = obs
                 # print(image_dict.keys())
                 curr_image = image_preprocess(image_dict, camera_names)
+                ground_action = [0]*state_dim if ground_action is None else ground_action
                 # torch.Size([1, 2, 3, 480, 640])
                 # print(curr_image.shape) 
 
@@ -326,7 +330,6 @@ def test_bc(config):
                     out.write(curr_image)                    
                 print(f'step {t}/{max_timestamps}')
     
-
 
 def image_preprocess(image_dict, camera_names):
     # 图像进入推理前的预处理

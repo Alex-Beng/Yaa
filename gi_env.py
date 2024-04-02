@@ -8,18 +8,22 @@
 from threading import Thread, Lock
 from readerwriterlock import rwlock
 from queue import Queue # copilot said it is thread safe
+from time import sleep
 
 # TODO: 做一套send/post message的接口，或者从GIA抄过来
 # 现在先用 pynput + pydirectinput 凑活用吧
-from pynput.keyboard import Controller
+from pynput.keyboard import Controller, Key
+from pynput.mouse import Button, Controller as MController
 import pydirectinput
 pydirectinput.PAUSE = 0
+import keyboard as kb
 
 from constants import TASK_CONFIG, STATE_DIM, SN_idx2key
 from utils import load_data_test, capture
 
 # windows only, translate from yap
 from win32gui import FindWindow
+import winsound
 
 def find_window_local():
     class_name = "UnityWndClass"
@@ -35,8 +39,9 @@ def find_window_cloud():
 
 # copy from PySmartCubeGenshin
 keyboard = Controller() # use like keyboard.press('a'); keyboard.release('a')
+mouse = MController()
 def move_mouse(x, y):
-    pydirectinput.moveTo(x, y, relative=True)
+    pydirectinput.move(x, y, relative=True)
 
 
 import IPython
@@ -151,30 +156,57 @@ class GIRealEnv:
         self.press_threshold = config['kb_threshold'] if 'kb_threshold' in config else 0.5
         assert 0 < self.press_threshold < 1
         
+        self.keymap = {
+            'LS': Key.shift_l,
+            ' ' : Key.space,
+        }
+        
     def reset(self):
         # reset the keyboard state
         self.keyboard_state = [0]*(STATE_DIM-2)
+        # need to wait for the key click to continue
+        print('Press r to reset')
+        # kb.wait('r')
+        winsound.Beep(1000, 100)
+
     
     def render(self):
         global latest_capture
         with capture_lock.gen_rlock():
-            return latest_capture
+            # rgba -> rgb
+            # print(latest_capture.shape)
+            latest_capture_rgb = latest_capture[:, :, :3]
+            # TODO: fix the cams name hardcode
+            image_dict = {
+                'rgb': latest_capture_rgb
+            }
+            return image_dict
     
     def step(self, action):
         # sigmoid should be done in caller
         for a_id in range(STATE_DIM-2):
+            the_key = SN_idx2key[a_id]
+            the_key = self.keymap[the_key] if the_key in self.keymap else the_key
             if action[a_id] > self.press_threshold:
                 if self.keyboard_state[a_id] == 0:
-                    print(f'press {SN_idx2key[a_id]}', end=' ')
-                    keyboard.press(SN_idx2key[a_id].lower())
+                    print(f'press {the_key}', end=' ')
+                    if the_key == 'ML':
+                        mouse.press(Button.left)
+                    else:
+                        keyboard.press(the_key.lower())
                     self.keyboard_state[a_id] = 1
             elif action[a_id] < 1 - self.press_threshold:
                 if self.keyboard_state[a_id] == 1:
-                    print(f'release {SN_idx2key[a_id]}', end=' ')
-                    keyboard.release(SN_idx2key[a_id].lower())
+                    print(f'release {the_key}', end=' ')
+                    if the_key == 'ML':
+                        mouse.release(Button.left)
+                    else:
+                        keyboard.release(the_key.lower())
                     self.keyboard_state[a_id] = 0
         # for mouse, input dx, dyww
         dx, dy = action[-2], action[-1]
+        # round to int
+        dx, dy = int(dx), int(dy)
         print(f'move mouse {dx}, {dy}')
         move_mouse(dx, dy)
         return True
