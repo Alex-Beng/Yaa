@@ -28,11 +28,11 @@ __act_config = {
     'device': 'cuda',
 
     'policy_class': 'act',  # 'mlp' or 'act for now
-    'ckpt_dir': os.path.join(os.path.dirname(__file__), 'models/act_nz2'),
+    'ckpt_dir': os.path.join(os.path.dirname(__file__), 'models/act_nz2_after5k'),
     'pretrained': True,
-    'pretrained_ckpt': r'./models/act_100l1_after4k6/policy_best.ckpt',
+    'pretrained_ckpt': r'./models/act_nz2_after4k/policy_epoch_1100_seed_114514.ckpt',
     'task_name': 'nz2',
-    'batch_size': 10,
+    'batch_size': 8,
     'seed': 114514,
     'num_epochs': 4000, 
     'lr': 1e-4,
@@ -77,13 +77,14 @@ __mlp_infer_config = {**__mlp_config, **{
 }}
 
 __act_infer_config = {**__act_config, **{
-    'ckpt_dir': os.path.join(os.path.dirname(__file__), 'models/act_100l1'),
+    'ckpt_dir': os.path.join(os.path.dirname(__file__), 'models/act_nz2_after5k'),
     'seed': 1000,
     'ckpt_name': 'policy_best.ckpt',
     # 'ckpt_name': 'policy_epoch_2300_seed_0.ckpt',
-    'temporal_agg': True,
-    # 'onscreen_render': True,
-    # 'save_video': True,
+    'temporal_agg': False,
+    'onscreen_render': True,
+    'save_video': True,
+    'real_GI': True,
     'video_dir': os.path.join(os.path.dirname(__file__), 'video/act'),
 }}
 
