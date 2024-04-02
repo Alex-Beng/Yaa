@@ -122,3 +122,8 @@ python act_imitate_learning.py --help
 ```shell
 python infer.py --help
 ```
+
+
+# RL fine-tuning
+
+TODO，coming soon
