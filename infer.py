@@ -7,6 +7,8 @@ import time
 import pickle
 import argparse
 from copy import deepcopy
+import ctypes
+import sys
 
 import cv2
 import torch
@@ -26,7 +28,13 @@ e = IPython.embed
 
 # TODO: make device configurable
 device = "cuda" if torch.cuda.is_available() else "cpu"
-# device = "cpu"
+
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
 
 def main(args):
     # the very first mom to get other parameters
@@ -341,24 +349,9 @@ if __name__ == '__main__':
                         help='which config to be used', 
                         choices=infer_configs.keys(),
                         required=True)
-    parser.add_argument('--ckpt_name',
-                        action='store', type=str,
-                        help='which ckpt to infer', 
-                        required=False)
-    parser.add_argument('--real_O', 
-                        action='store_true', 
-                        help='infer in GI')
-    parser.add_argument('--save_video', 
-                        action='store_true', 
-                        help='save_video',
-                        default=True)
-    parser.add_argument('--temporal_agg', 
-                        action='store_true',
-                        help='temporal_agg',
-                        default=True)
-    parser.add_argument('--onscreen_render',
-                        action='store_true',
-                        help='onscreen_render',
-                        default=True)
-    
-    main(vars(parser.parse_args()))
+    if is_admin():
+        main(vars(parser.parse_args()))
+    else:
+        # 以管理员权限重新运行程序，同时传递参数
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        sys.exit(0)
