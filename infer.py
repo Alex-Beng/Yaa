@@ -1,6 +1,3 @@
-# 进行act网络的推理
-# TODO: 封装O的操作到env
-
 # 使用act网络进行模仿学习
 import os
 import time
