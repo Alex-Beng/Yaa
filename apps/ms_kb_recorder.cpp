@@ -13,7 +13,7 @@
 #include "interception.h"
 #include "nlohmann/json.hpp"
 
-void record() {
+void record_interception() {
     // 摁F6开始录制
     std::cout << "Press F6 to start recording...\n" << std::endl;
     wait_untill_press(SCANCODE_F6);
@@ -102,6 +102,10 @@ void record() {
 
 }
 
+void record_dinput() {
+    
+}
+
 void process_event_time(std::vector<ABEvent>& events) {
     for (auto i = events.size() - 1; i >= 1; i--) {
         events[i].timestamp -= events[i - 1].timestamp;
@@ -156,13 +160,18 @@ void replay() {
 
 int main(int argc, char** argv) {
     if (argc < 2) {
-        record();
-        std::cout << "Usage: ms_kb_recorder [record|replay]" << std::endl;
+        std::cout << "Usage: ms_kb_recorder [record|drecord|replay]" << std::endl;
+        std::cout << "record: use interception to record mouse and keyboard events" << std::endl;
+        std::cout << "drecord: use dinput to record mouse and keyboard events" << std::endl;
+        std::cout << "replay: replay the recorded events" << std::endl;
         return 0;
     }
     std::string mode = argv[1];
     if (mode == "record") {
-        record();
+        record_interception();
+    }
+    else if (mode == "drecord") {
+        record_dinput();
     }
     else if (mode == "replay") {
         replay();
