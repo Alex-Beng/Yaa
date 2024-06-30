@@ -12,5 +12,7 @@ foreach(sourcefile ${SOURCES})
         nlohmann_json::nlohmann_json 
         ${OpenCV_LIBS}
         CLI11::CLI11
+        dinput8 
+        dxguid
     )
 endforeach(sourcefile ${SOURCES})
