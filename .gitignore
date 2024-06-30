@@ -28,3 +28,6 @@ mlp_infer.py
 /*.dll
 /shell_scripts/test.*
 /shell_scripts/train.*
+/visualize_model.py
+/runs
+/print_resnet.py
