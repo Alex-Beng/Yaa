@@ -8,7 +8,10 @@
 #include <string>
 #include <thread>
 #include <chrono>
+
 #include <windows.h>
+#include <dinput.h>
+
 #include "interception.h"
 #include "nlohmann/json.hpp"
 
@@ -178,7 +181,30 @@ bool jsonl2mskbevts(std::vector<ABEvent>& events, std::string path) {
     return true;
 }
 
-void wait_untill_press(SCANCODE scancode) {
+void wait_untill_press(SCANCODE scancode, bool use_interception = true) {
+    // TODO: use dinput to do the waiting
+    if (!use_interception) {
+        IDirectInput8W* idi8;
+        IDirectInputDevice8W* kbDev;
+        DIMOUSESTATE2 msState;
+        BYTE kbState[256];
+        HINSTANCE h = GetModuleHandle(NULL);
+        DirectInput8Create(h, 0x0800, IID_IDirectInput8, (void**)&idi8, NULL);
+        if (!SUCCEEDED(idi8->CreateDevice(GUID_SysKeyboard, &kbDev, NULL))) {
+            return ;
+        }
+        kbDev->SetDataFormat(&c_dfDIKeyboard);
+        kbDev->SetCooperativeLevel(NULL, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE);
+
+        while (true) {
+            kbDev->Acquire();
+            kbDev->GetDeviceState(sizeof(kbState), kbState);
+            if (kbState[scancode] != 0) {
+                break;
+            }
+        }
+    }
+
     InterceptionContext ctx = interception_create_context();
     InterceptionDevice device;
     InterceptionStroke stroke;
