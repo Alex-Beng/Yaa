@@ -7,12 +7,14 @@ foreach(sourcefile ${SOURCES})
     get_filename_component(name ${sourcefile} NAME_WE)
     add_executable(${name} ${sourcefile})
     target_link_libraries(
-        ${name} 
-        interception 
+        ${name}  
         nlohmann_json::nlohmann_json 
         ${OpenCV_LIBS}
         CLI11::CLI11
         dinput8 
         dxguid
     )
+    if (ENABLE_INTERCEPTION)
+        target_link_libraries(${name} interception)
+    endif()
 endforeach(sourcefile ${SOURCES})

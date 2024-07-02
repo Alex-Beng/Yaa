@@ -171,6 +171,7 @@ void bb_capture_consumer(BBCaptureConfig& config) {
 
 // thread 2
 // ms kb recorder
+#ifdef ENABLE_INTERCEPTION
 void ms_kb_recorder(BBCaptureConfig& config, std::chrono::steady_clock::time_point start_time) {
     bool key_state[1<<16] = {false};
     std::vector<ABEvent> events;
@@ -238,6 +239,11 @@ void ms_kb_recorder(BBCaptureConfig& config, std::chrono::steady_clock::time_poi
     // saving to jsonl
     mskbevts2jsonl(events, config.output_path + "/" + config.task_name + "/" + std::to_string(config.episode_id) + "_mskb.jsonl");
 }
+#else
+void ms_kb_recorder(BBCaptureConfig& config, std::chrono::steady_clock::time_point start_time) {
+    // TODO
+}
+#endif
 
 // read config from argv
 void read_config(int argc, char const *argv[], BBCaptureConfig& config) {

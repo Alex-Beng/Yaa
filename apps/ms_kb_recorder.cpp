@@ -10,9 +10,12 @@
 #include <thread>
 #include <chrono>
 #include <windows.h>
-#include "interception.h"
+#ifdef ENABLE_INTERCEPTION
+    #include "interception.h"
+#endif
 #include "nlohmann/json.hpp"
 
+#ifdef ENABLE_INTERCEPTION
 void record_interception() {
     // 摁F6开始录制
     std::cout << "Press F6 to start recording...\n" << std::endl;
@@ -102,14 +105,6 @@ void record_interception() {
 
 }
 
-void process_event_time(std::vector<ABEvent>& events) {
-    for (auto i = events.size() - 1; i >= 1; i--) {
-        events[i].timestamp -= events[i - 1].timestamp;
-    }
-    events[0].timestamp = 0;
-    
-}
-
 void replay_interception() {
     std::vector<ABEvent> events;
     jsonl2mskbevts(events, "data.jsonl");
@@ -154,12 +149,31 @@ void replay_interception() {
     interception_destroy_context(ctx);
 }
 
+#else
+
+void record_interception() {
+    std::cout << "Interception is not enabled." << std::endl;
+}
+
+void replay_interception() {
+    std::cout << "Interception is not enabled." << std::endl;
+}
+
+#endif
 
 void record_dinput() {
     
 }
 
 void replay_dinput() {
+    
+}
+
+void process_event_time(std::vector<ABEvent>& events) {
+    for (auto i = events.size() - 1; i >= 1; i--) {
+        events[i].timestamp -= events[i - 1].timestamp;
+    }
+    events[0].timestamp = 0;
     
 }
 

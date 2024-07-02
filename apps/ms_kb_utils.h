@@ -12,7 +12,10 @@
 #include <windows.h>
 #include <dinput.h>
 
-#include "interception.h"
+#ifdef ENABLE_INTERCEPTION
+    #include "interception.h"
+#endif
+
 #include "nlohmann/json.hpp"
 
 // defines
@@ -89,18 +92,18 @@ enum EVENT_TYPE {
 };
 
 enum MOUSE_EVENT_TYEP {
-    MOUSE_EVENT_RELATIVE = INTERCEPTION_MOUSE_MOVE_RELATIVE,
-    MOUSE_EVENT_LEFT_DOWN = INTERCEPTION_MOUSE_LEFT_BUTTON_DOWN,
-    MOUSE_EVENT_LEFT_UP = INTERCEPTION_MOUSE_LEFT_BUTTON_UP,
-    MOUSE_EVENT_RIGHT_DOWN = INTERCEPTION_MOUSE_RIGHT_BUTTON_DOWN,
-    MOUSE_EVENT_RIGHT_UP = INTERCEPTION_MOUSE_RIGHT_BUTTON_UP,
-    MOUSE_EVENT_MIDDLE_DOWN = INTERCEPTION_MOUSE_MIDDLE_BUTTON_DOWN,
-    MOUSE_EVENT_MIDDLE_UP = INTERCEPTION_MOUSE_MIDDLE_BUTTON_UP,
+    MOUSE_EVENT_RELATIVE    = 0x000,
+    MOUSE_EVENT_LEFT_DOWN   = 0x001,
+    MOUSE_EVENT_LEFT_UP     = 0x002,
+    MOUSE_EVENT_RIGHT_DOWN  = 0x004,
+    MOUSE_EVENT_RIGHT_UP    = 0x008,
+    MOUSE_EVENT_MIDDLE_DOWN = 0x010,
+    MOUSE_EVENT_MIDDLE_UP   = 0x020,
 };
 
 enum KEYBOARD_EVENT_TYPE {
-    KEYBOARD_EVENT_DOWN = INTERCEPTION_KEY_DOWN,
-    KEYBOARD_EVENT_UP = INTERCEPTION_KEY_UP,
+    KEYBOARD_EVENT_DOWN     = 0x00,
+    KEYBOARD_EVENT_UP       = 0x01,
 };
 
 struct ABMouseEvent {
@@ -204,7 +207,7 @@ void wait_untill_press(SCANCODE scancode, bool use_interception = true) {
             }
         }
     }
-
+#ifdef ENABLE_INTERCEPTION
     InterceptionContext ctx = interception_create_context();
     InterceptionDevice device;
     InterceptionStroke stroke;
@@ -220,6 +223,7 @@ void wait_untill_press(SCANCODE scancode, bool use_interception = true) {
             }
         }
     }
+#endif
 }
 
 
