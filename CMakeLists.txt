@@ -4,6 +4,8 @@ project(Yaa)
 set(CMAKE_CXX_STANDARD 17)
 # in case Chinese note won't couse error
 add_compile_options(/utf-8)
+# 设置bin目录
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include(cmake/interception.cmake)
 include(cmake/nlohmann_json.cmake)
