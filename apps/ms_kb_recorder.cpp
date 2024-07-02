@@ -102,10 +102,6 @@ void record_interception() {
 
 }
 
-void record_dinput() {
-    
-}
-
 void process_event_time(std::vector<ABEvent>& events) {
     for (auto i = events.size() - 1; i >= 1; i--) {
         events[i].timestamp -= events[i - 1].timestamp;
@@ -114,7 +110,7 @@ void process_event_time(std::vector<ABEvent>& events) {
     
 }
 
-void replay() {
+void replay_interception() {
     std::vector<ABEvent> events;
     jsonl2mskbevts(events, "data.jsonl");
     process_event_time(events);
@@ -158,12 +154,27 @@ void replay() {
     interception_destroy_context(ctx);
 }
 
+
+void record_dinput() {
+    
+}
+
+void replay_dinput() {
+    
+}
+
+void print_help() {
+    std::cout << "Usage: ms_kb_recorder [record|drecord|replay|dreplay]" << std::endl;
+    std::cout << "record: use interception to record mouse and keyboard events" << std::endl;
+    std::cout << "drecord: use dinput to record mouse and keyboard events" << std::endl;
+    std::cout << "replay: replay the recorded events" << std::endl;
+    std::cout << "dreplay: replay the recorded events using dinput" << std::endl;
+}
+
+
 int main(int argc, char** argv) {
     if (argc < 2) {
-        std::cout << "Usage: ms_kb_recorder [record|drecord|replay]" << std::endl;
-        std::cout << "record: use interception to record mouse and keyboard events" << std::endl;
-        std::cout << "drecord: use dinput to record mouse and keyboard events" << std::endl;
-        std::cout << "replay: replay the recorded events" << std::endl;
+        print_help();
         return 0;
     }
     std::string mode = argv[1];
@@ -174,10 +185,13 @@ int main(int argc, char** argv) {
         record_dinput();
     }
     else if (mode == "replay") {
-        replay();
+        replay_interception();
+    }
+    else if (mode == "dreplay") {
+        replay_dinput();
     }
     else {
-        std::cout << "Usage: ms_kb_recorder [record|replay]" << std::endl;
+        print_help();
         return -1; 
     }
     return 0;
