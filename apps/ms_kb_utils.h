@@ -223,6 +223,8 @@ void wait_untill_press(SCANCODE scancode, bool use_interception = true) {
             }
         }
     }
+#else
+    std::cout << "Interception is not enabled." << std::endl;
 #endif
 }
 
