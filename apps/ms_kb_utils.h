@@ -185,7 +185,7 @@ bool jsonl2mskbevts(std::vector<ABEvent>& events, std::string path) {
 }
 
 void wait_untill_press(SCANCODE scancode, bool use_interception = true) {
-    // TODO: use dinput to do the waiting
+    // use dinput to do the waiting
     if (!use_interception) {
         IDirectInput8W* idi8;
         IDirectInputDevice8W* kbDev;
