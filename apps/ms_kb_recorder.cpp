@@ -206,11 +206,14 @@ void record_dinput() {
     while (true) {
         msDev->Acquire();
         msDev->GetDeviceState(sizeof(msState), &msState);
+        auto curr_time = std::chrono::high_resolution_clock::now();
+        auto curr_timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_timestamp).count();
+
+        // TODO: rm dummy press
+        // TODO: add wheel event
         if (msState.lX != 0 || msState.lY != 0 || msState.rgbButtons[0] != 0 || msState.rgbButtons[1] != 0) {
             // printf("%d %d %d %d\n", msState.lX, msState.lY, msState.rgbButtons[0], msState.rgbButtons[1]);
             ABEvent event;
-            auto curr_time = std::chrono::high_resolution_clock::now();
-            auto curr_timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_timestamp).count();
             event.timestamp = curr_timestamp;
             event.type = EVENT_TYPE_MOUSE;
             event.mouse.dx = msState.lX;
@@ -221,6 +224,8 @@ void record_dinput() {
 
         kbDev->Acquire();
         kbDev->GetDeviceState(sizeof(kbState), kbState);
+        curr_time = std::chrono::high_resolution_clock::now();
+        curr_timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_timestamp).count();
         // 摁F6结束录制
         if (kbState[SCANCODE_F6] != 0) {
             std::cout << "Stop recording..." << std::endl;
@@ -239,8 +244,6 @@ void record_dinput() {
             
             key_state[scancode] = kbState[scancode];
             ABEvent event;
-            auto curr_time = std::chrono::high_resolution_clock::now();
-            auto curr_timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_timestamp).count();
             event.timestamp = curr_timestamp;
             event.type = EVENT_TYPE_KEYBOARD;
             event.keyboard.scancode = scancode;
