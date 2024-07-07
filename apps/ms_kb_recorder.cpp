@@ -162,11 +162,100 @@ void replay_interception() {
 #endif
 
 void record_dinput() {
-    
+    // 按F6开始录制
+    std::cout << "Press F6 to start recording...\n" << std::endl;
+    wait_untill_press(SCANCODE_F6, false);
+
+    countdown(3);
+
+    // 花上2^16打个lut
+    // 表示按键状态，以去除键盘重复的
+    BYTE key_state[1<<16] = {0};
+
+    // 先存到内存里，然后再写入文件
+    std::vector<ABEvent> events;
+    // for about 100+ seconds
+    events.reserve(10000);
+
+    // create mouse and keyboard device
+    IDirectInput8W* idi8;
+    IDirectInputDevice8W* msDev;
+    IDirectInputDevice8W* kbDev;
+    DIMOUSESTATE2 msState;
+    BYTE kbState[256];
+    HINSTANCE h = GetModuleHandle(NULL);
+    DirectInput8Create(h, 0x0800, IID_IDirectInput8, (void**)&idi8, NULL);
+    // 创建鼠标设备
+    if (!SUCCEEDED(idi8->CreateDevice(GUID_SysMouse, &msDev, NULL))) {
+        std::cout << "Failed to create mouse device." << std::endl;
+        return ;
+    }
+    msDev->SetDataFormat(&c_dfDIMouse2);
+    msDev->SetCooperativeLevel(NULL, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE);
+
+    // 创建键盘设备
+    if (!SUCCEEDED(idi8->CreateDevice(GUID_SysKeyboard, &kbDev, NULL))) {
+        std::cout << "Failed to create keyboard device." << std::endl;
+        return ;
+    }
+    kbDev->SetDataFormat(&c_dfDIKeyboard);
+    kbDev->SetCooperativeLevel(NULL, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE);
+
+    // 使用相对时间戳
+    auto start_timestamp = std::chrono::high_resolution_clock::now();
+    while (true) {
+        msDev->Acquire();
+        msDev->GetDeviceState(sizeof(msState), &msState);
+        if (msState.lX != 0 || msState.lY != 0 || msState.rgbButtons[0] != 0 || msState.rgbButtons[1] != 0) {
+            // printf("%d %d %d %d\n", msState.lX, msState.lY, msState.rgbButtons[0], msState.rgbButtons[1]);
+            ABEvent event;
+            auto curr_time = std::chrono::high_resolution_clock::now();
+            auto curr_timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_timestamp).count();
+            event.timestamp = curr_timestamp;
+            event.type = EVENT_TYPE_MOUSE;
+            event.mouse.dx = msState.lX;
+            event.mouse.dy = msState.lY;
+            event.mouse.event_type = msState.rgbButtons[0] != 0 ? 1 : 0;
+            events.push_back(event);
+        }
+
+        kbDev->Acquire();
+        kbDev->GetDeviceState(sizeof(kbState), kbState);
+        // 摁F6结束录制
+        if (kbState[SCANCODE_F6] != 0) {
+            std::cout << "Stop recording..." << std::endl;
+            break;
+        }
+        // 对于KOI，检查状态，变成事件
+        for (const auto& scancode : scancode_set) {
+            // 如果已经按下了，就不要再记录了
+            if (key_state[scancode] != 0 && kbState[scancode] != 0) {
+                continue;
+            }
+            // 仅记录按下和松开
+            if (key_state[scancode] == kbState[scancode]) {
+                continue;
+            }
+            
+            key_state[scancode] = kbState[scancode];
+            ABEvent event;
+            auto curr_time = std::chrono::high_resolution_clock::now();
+            auto curr_timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_timestamp).count();
+            event.timestamp = curr_timestamp;
+            event.type = EVENT_TYPE_KEYBOARD;
+            event.keyboard.scancode = scancode;
+            event.keyboard.event_type = kbState[scancode] != 0 ? 1 : 0;
+            events.push_back(event);
+        }
+    }
+
+    idi8->Release();
+    std::cout << "Saving to file..." << std::endl;
+    mskbevts2jsonl(events, "data.jsonl");
 }
 
 void replay_dinput() {
-    
+    // TODO: 重放
 }
 
 void process_event_time(std::vector<ABEvent>& events) {
