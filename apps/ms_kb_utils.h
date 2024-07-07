@@ -206,6 +206,7 @@ void wait_untill_press(SCANCODE scancode, bool use_interception = true) {
                 break;
             }
         }
+        return;
     }
 #ifdef ENABLE_INTERCEPTION
     InterceptionContext ctx = interception_create_context();
