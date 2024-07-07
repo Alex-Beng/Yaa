@@ -4,6 +4,8 @@
 #include <Windows.h>
 #include <cstdio>
 #include <ctime>
+#include <chrono>
+#include <thread>
 
 int main()
 {
@@ -28,6 +30,10 @@ int main()
 	kbDev->SetDataFormat(&c_dfDIKeyboard);
 	kbDev->SetCooperativeLevel(NULL, DISCL_BACKGROUND | DISCL_NONEXCLUSIVE);
 
+	// 测试一下频率
+	auto start = std::chrono::high_resolution_clock::now();
+	int cnt = 0;
+
 	while (true) {
 		msDev->Acquire();
 		msDev->GetDeviceState(sizeof(msState), &msState);
@@ -43,8 +49,20 @@ int main()
 			}
 		}
 		printf("\n");
+		cnt += 1;
+		auto end = std::chrono::high_resolution_clock::now();
 
-		fflush(stdout);
+		// 计算频率
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		if (duration.count() >= 1000) {
+			printf("Frequency: %d\n", cnt);
+			cnt = 0;
+			start = end;
+		}
+
+		// fflush(stdout);
 		Sleep(CLOCKS_PER_SEC/1000);
+		// sleep for 0.1 ms
+		// std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 }
