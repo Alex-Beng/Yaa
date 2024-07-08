@@ -37,9 +37,11 @@ int main()
 	while (true) {
 		msDev->Acquire();
 		msDev->GetDeviceState(sizeof(msState), &msState);
-		if (msState.lX != 0 || msState.lY != 0 || msState.lZ != 0 || msState.rgbButtons[0] != 0 || msState.rgbButtons[1] != 0) {
-			printf("%d %d %d %d %d\n", msState.lX, msState.lY, msState.lZ,
-			msState.rgbButtons[0], msState.rgbButtons[1]);
+		if (msState.lX != 0 || msState.lY != 0 || msState.lZ != 0 
+		 || msState.rgbButtons[0] != 0 || msState.rgbButtons[1] != 0
+		 || msState.rgbButtons[2] != 0) {
+			printf("%d %d %d %d %d %d\n", msState.lX, msState.lY, msState.lZ,
+			msState.rgbButtons[0], msState.rgbButtons[1], msState.rgbButtons[2]);
 		}
 
 		kbDev->Acquire();
