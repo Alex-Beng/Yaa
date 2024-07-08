@@ -37,8 +37,9 @@ int main()
 	while (true) {
 		msDev->Acquire();
 		msDev->GetDeviceState(sizeof(msState), &msState);
-		if (msState.lX != 0 || msState.lY != 0 || msState.rgbButtons[0] != 0 || msState.rgbButtons[1] != 0) {
-			printf("%d %d %d %d\n", msState.lX, msState.lY, msState.rgbButtons[0], msState.rgbButtons[1]);
+		if (msState.lX != 0 || msState.lY != 0 || msState.lZ != 0 || msState.rgbButtons[0] != 0 || msState.rgbButtons[1] != 0) {
+			printf("%d %d %d %d %d\n", msState.lX, msState.lY, msState.lZ,
+			msState.rgbButtons[0], msState.rgbButtons[1]);
 		}
 
 		kbDev->Acquire();
@@ -48,7 +49,7 @@ int main()
 				printf("%d ", i);
 			}
 		}
-		printf("\n");
+		// printf("\n");
 		cnt += 1;
 		auto end = std::chrono::high_resolution_clock::now();
 
