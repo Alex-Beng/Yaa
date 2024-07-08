@@ -170,7 +170,8 @@ void record_dinput() {
 
     // 花上2^16打个lut
     // 表示按键状态，以去除键盘重复的
-    BYTE key_state[1<<16] = {0};
+    BYTE global_key_state[1<<16] = {0};
+    BYTE global_ms_button_state[8] = {0};    
 
     // 先存到内存里，然后再写入文件
     std::vector<ABEvent> events;
@@ -209,17 +210,54 @@ void record_dinput() {
         auto curr_time = std::chrono::high_resolution_clock::now();
         auto curr_timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(curr_time - start_timestamp).count();
 
-        // TODO: rm dummy press
-        // TODO: add wheel event
-        if (msState.lX != 0 || msState.lY != 0 || msState.rgbButtons[0] != 0 || msState.rgbButtons[1] != 0) {
-            // printf("%d %d %d %d\n", msState.lX, msState.lY, msState.rgbButtons[0], msState.rgbButtons[1]);
+        // 需要把 x y z 和鼠标button分开
+        if (msState.lX != 0 || msState.lY != 0) {
             ABEvent event;
             event.timestamp = curr_timestamp;
             event.type = EVENT_TYPE_MOUSE;
             event.mouse.dx = msState.lX;
             event.mouse.dy = msState.lY;
-            event.mouse.event_type = msState.rgbButtons[0] != 0 ? 1 : 0;
+            event.mouse.event_type = MOUSE_EVENT_RELATIVE;
             events.push_back(event);
+        }
+        if (msState.lZ != 0) {
+            ABEvent event;
+            event.timestamp = curr_timestamp;
+            event.type = EVENT_TYPE_MOUSE;
+            event.mouse.dx = 0;
+            event.mouse.dy = msState.lZ;
+            event.mouse.event_type = MOUSE_EVENT_WHEEL;
+            events.push_back(event);
+        }
+        if (msState.rgbButtons[0] != global_ms_button_state[0]) {
+            ABEvent event;
+            event.timestamp = curr_timestamp;
+            event.type = EVENT_TYPE_MOUSE;
+            event.mouse.dx = 0;
+            event.mouse.dy = 0;
+            event.mouse.event_type = msState.rgbButtons[0] != 0 ? MOUSE_EVENT_LEFT_DOWN : MOUSE_EVENT_LEFT_UP;
+            events.push_back(event);
+            global_ms_button_state[0] = msState.rgbButtons[0];
+        }
+        if (msState.rgbButtons[1] != global_ms_button_state[1]) {
+            ABEvent event;
+            event.timestamp = curr_timestamp;
+            event.type = EVENT_TYPE_MOUSE;
+            event.mouse.dx = 0;
+            event.mouse.dy = 0;
+            event.mouse.event_type = msState.rgbButtons[1] != 0 ? MOUSE_EVENT_RIGHT_DOWN : MOUSE_EVENT_RIGHT_UP;
+            events.push_back(event);
+            global_ms_button_state[1] = msState.rgbButtons[1];
+        }
+        if (msState.rgbButtons[2] != global_ms_button_state[2]) {
+            ABEvent event;
+            event.timestamp = curr_timestamp;
+            event.type = EVENT_TYPE_MOUSE;
+            event.mouse.dx = 0;
+            event.mouse.dy = 0;
+            event.mouse.event_type = msState.rgbButtons[2] != 0 ? MOUSE_EVENT_MIDDLE_DOWN : MOUSE_EVENT_MIDDLE_UP;
+            events.push_back(event);
+            global_ms_button_state[2] = msState.rgbButtons[2];
         }
 
         kbDev->Acquire();
@@ -234,15 +272,15 @@ void record_dinput() {
         // 对于KOI，检查状态，变成事件
         for (const auto& scancode : scancode_set) {
             // 如果已经按下了，就不要再记录了
-            if (key_state[scancode] != 0 && kbState[scancode] != 0) {
+            if (global_key_state[scancode] != 0 && kbState[scancode] != 0) {
                 continue;
             }
             // 仅记录按下和松开
-            if (key_state[scancode] == kbState[scancode]) {
+            if (global_key_state[scancode] == kbState[scancode]) {
                 continue;
             }
             
-            key_state[scancode] = kbState[scancode];
+            global_key_state[scancode] = kbState[scancode];
             ABEvent event;
             event.timestamp = curr_timestamp;
             event.type = EVENT_TYPE_KEYBOARD;
